@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String
+  refreshToken String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  completions  Completion[]
+  habits       Habit[]
+}
+
+model Habit {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String   @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  category    String   @default("other")
+  frequency   String   @default("daily")
+  color       String   @default("#6366f1")
+  icon        String   @default("mdi-star")
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  actions     Action[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Action {
+  id          String       @id @default(cuid())
+  habitId     String
+  title       String       @db.VarChar(200)
+  order       Int          @default(0)
+  habit       Habit        @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  completions Completion[]
+}
+
+model Completion {
+  id          String   @id @default(cuid())
+  actionId    String
+  userId      String
+  date        DateTime @db.Date
+  completedAt DateTime @default(now())
+  action      Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([actionId, userId, date])
+  @@index([userId, date])
+}
