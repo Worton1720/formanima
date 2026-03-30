@@ -1,1 +1,61 @@
-<template><v-container><h1>Habits</h1></v-container></template>
+<template>
+  <v-container>
+    <div class="d-flex align-center mb-6">
+      <h1 class="text-h5">Мои привычки</h1>
+      <v-spacer />
+      <v-btn color="primary" prepend-icon="mdi-plus" @click="showForm = true">Добавить</v-btn>
+    </div>
+
+    <v-dialog v-model="showForm" max-width="500">
+      <HabitForm :habit="editingHabit" @submit="onSubmit" @cancel="closeForm" />
+    </v-dialog>
+
+    <v-progress-linear v-if="store.loading" indeterminate color="primary" class="mb-4" />
+
+    <v-row v-if="store.habits.length">
+      <v-col v-for="habit in store.habits" :key="habit.id" cols="12" md="6" lg="4">
+        <HabitCard :habit="habit" @edit="startEdit" @archive="store.archive" />
+      </v-col>
+    </v-row>
+
+    <v-empty-state
+      v-else-if="!store.loading"
+      icon="mdi-fire"
+      title="Нет привычек"
+      text="Создайте первую привычку, чтобы начать"
+    />
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useHabitsStore } from '../stores/habits.store';
+import HabitCard from '../components/habits/HabitCard.vue';
+import HabitForm from '../components/habits/HabitForm.vue';
+import type { Habit } from '../types';
+
+const store = useHabitsStore();
+const showForm = ref(false);
+const editingHabit = ref<Habit | undefined>();
+
+onMounted(() => store.fetchAll());
+
+function startEdit(habit: Habit) {
+  editingHabit.value = habit;
+  showForm.value = true;
+}
+
+function closeForm() {
+  showForm.value = false;
+  editingHabit.value = undefined;
+}
+
+async function onSubmit(data: Partial<Habit>) {
+  if (editingHabit.value) {
+    await store.update(editingHabit.value.id, data);
+  } else {
+    await store.create(data);
+  }
+  closeForm();
+}
+</script>
