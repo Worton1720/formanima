@@ -25,7 +25,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    await authApi.logout();
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore errors on logout
+    }
     accessToken.value = null;
     userId.value = null;
     localStorage.removeItem('accessToken');
