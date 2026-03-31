@@ -5,14 +5,28 @@
         <v-card elevation="8" rounded="xl">
           <v-card-title class="text-h5 pa-6 text-center">Регистрация</v-card-title>
           <v-card-text>
-            <v-form @submit.prevent="submit">
-              <v-text-field v-model="name" label="Имя" prepend-inner-icon="mdi-account" class="mb-2" />
-              <v-text-field v-model="email" label="Email" type="email" prepend-inner-icon="mdi-email" class="mb-2" />
+            <v-form ref="form" @submit.prevent="submit">
+              <v-text-field
+                v-model="name"
+                label="Имя"
+                prepend-inner-icon="mdi-account"
+                :rules="nameRules"
+                class="mb-2"
+              />
+              <v-text-field
+                v-model="email"
+                label="Email"
+                type="email"
+                prepend-inner-icon="mdi-email"
+                :rules="emailRules"
+                class="mb-2"
+              />
               <v-text-field
                 v-model="password"
                 label="Пароль (мин. 8 символов)"
                 type="password"
                 prepend-inner-icon="mdi-lock"
+                :rules="passwordRules"
                 class="mb-4"
               />
               <v-alert v-if="error" type="error" class="mb-4" density="compact">{{ error }}</v-alert>
@@ -38,20 +52,44 @@ import { useAuthStore } from '../stores/auth.store';
 
 const auth = useAuthStore();
 const router = useRouter();
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
 const name = ref('');
 const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref('');
 
+const nameRules = [
+  (v: string) => !!v?.trim() || 'Введите имя',
+  (v: string) => v.trim().length >= 2 || 'Минимум 2 символа',
+];
+const emailRules = [
+  (v: string) => !!v || 'Введите email',
+  (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Некорректный email',
+];
+const passwordRules = [
+  (v: string) => !!v || 'Введите пароль',
+  (v: string) => v.length >= 8 || 'Минимум 8 символов',
+];
+
 async function submit() {
+  const { valid } = await form.value!.validate();
+  if (!valid) return;
+
   loading.value = true;
   error.value = '';
   try {
     await auth.register(email.value, password.value, name.value);
     router.push('/dashboard');
-  } catch {
-    error.value = 'Ошибка регистрации. Возможно, email уже используется.';
+  } catch (e: any) {
+    const status = e?.response?.status;
+    if (status === 409) {
+      error.value = 'Этот email уже зарегистрирован';
+    } else if (status === 400) {
+      error.value = 'Проверьте правильность введённых данных';
+    } else {
+      error.value = 'Ошибка сервера. Попробуйте позже';
+    }
   } finally {
     loading.value = false;
   }

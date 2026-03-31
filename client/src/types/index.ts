@@ -43,3 +43,22 @@ export interface HabitOverview {
   completedDays: number;
   totalDays: number;
 }
+
+export interface AchievementStatus {
+  id: string;
+  name: string;
+  description: string;
+  xpReward: number;
+  unlocked: boolean;
+  unlockedAt: string | null;
+}
+
+export interface GamificationProfile {
+  xp: number;
+  level: number;
+  xpCurrentLevel: number;
+  xpToNextLevel: number;
+  totalStrikes: number;
+  rank: 'apprentice' | 'journeyman' | 'master' | 'grandmaster';
+  achievements: AchievementStatus[];
+}

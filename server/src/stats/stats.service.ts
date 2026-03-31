@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HabitsService } from '../habits/habits.service';
 
 @Injectable()
 export class StatsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private habits: HabitsService,
+  ) {}
 
   async getStreak(habitId: string, userId: string): Promise<{ current: number; best: number }> {
+    await this.habits.findOne(habitId, userId);
     const actions = await this.prisma.action.findMany({ where: { habitId } });
     if (actions.length === 0) return { current: 0, best: 0 };
 
@@ -67,7 +72,7 @@ export class StatsService {
       include: { actions: true },
     });
 
-    const results = [];
+    const results: { habitId: string; title: string; completionRate: number; completedDays: number; totalDays: number }[] = [];
     for (const habit of habits) {
       if (habit.actions.length === 0) continue;
       const actionIds = habit.actions.map((a) => a.id);

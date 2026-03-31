@@ -1,5 +1,5 @@
 import client from './client';
-import type { AuthResponse } from '../types';
+import type { AuthResponse, User } from '../types';
 
 export const authApi = {
   register: (data: { email: string; password: string; name: string }) =>
@@ -7,6 +7,11 @@ export const authApi = {
 
   login: (data: { email: string; password: string }) =>
     client.post<AuthResponse>('/auth/login', data).then((r) => r.data),
+
+  refresh: (refreshToken: string) =>
+    client.post<AuthResponse>('/auth/refresh', { refreshToken }).then((r) => r.data),
+
+  getMe: () => client.get<User>('/auth/me').then((r) => r.data),
 
   logout: () => client.post('/auth/logout'),
 };

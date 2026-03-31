@@ -14,7 +14,7 @@
 
     <v-row v-if="store.habits.length">
       <v-col v-for="habit in store.habits" :key="habit.id" cols="12" md="6" lg="4">
-        <HabitCard :habit="habit" @edit="startEdit" @archive="store.archive" />
+        <HabitCard :habit="habit" @edit="startEdit" @archive="archiveHabit" />
       </v-col>
     </v-row>
 
@@ -30,15 +30,23 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useHabitsStore } from '../stores/habits.store';
+import { useNotify } from '../composables/useNotify';
 import HabitCard from '../components/habits/HabitCard.vue';
 import HabitForm from '../components/habits/HabitForm.vue';
 import type { Habit } from '../types';
 
 const store = useHabitsStore();
+const { notify } = useNotify();
 const showForm = ref(false);
 const editingHabit = ref<Habit | undefined>();
 
-onMounted(() => store.fetchAll());
+onMounted(async () => {
+  try {
+    await store.fetchAll();
+  } catch {
+    notify('Не удалось загрузить привычки');
+  }
+});
 
 function startEdit(habit: Habit) {
   editingHabit.value = habit;
@@ -51,11 +59,23 @@ function closeForm() {
 }
 
 async function onSubmit(data: Partial<Habit>) {
-  if (editingHabit.value) {
-    await store.update(editingHabit.value.id, data);
-  } else {
-    await store.create(data);
+  try {
+    if (editingHabit.value) {
+      await store.update(editingHabit.value.id, data);
+    } else {
+      await store.create(data);
+    }
+    closeForm();
+  } catch {
+    notify('Не удалось сохранить привычку');
   }
-  closeForm();
+}
+
+async function archiveHabit(habitId: string) {
+  try {
+    await store.archive(habitId);
+  } catch {
+    notify('Не удалось архивировать привычку');
+  }
 }
 </script>

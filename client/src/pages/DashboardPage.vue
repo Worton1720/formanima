@@ -29,6 +29,8 @@
       </v-col>
     </v-row>
 
+    <GamificationWidget />
+
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
     <v-row v-if="habitsWithActions.length">
@@ -58,7 +60,9 @@ import 'dayjs/locale/ru';
 import { useAuthStore } from '../stores/auth.store';
 import { useHabitsStore } from '../stores/habits.store';
 import { useTrackingStore } from '../stores/tracking.store';
+import { useNotify } from '../composables/useNotify';
 import DailyHabitCard from '../components/tracking/DailyHabitCard.vue';
+import GamificationWidget from '../components/gamification/GamificationWidget.vue';
 
 dayjs.locale('ru');
 
@@ -66,6 +70,7 @@ const auth = useAuthStore();
 const habitsStore = useHabitsStore();
 const trackingStore = useTrackingStore();
 const router = useRouter();
+const { notify } = useNotify();
 const loading = ref(true);
 const today = dayjs().format('YYYY-MM-DD');
 const formattedDate = dayjs().format('dddd, D MMMM YYYY');
@@ -92,10 +97,15 @@ async function logout() {
 }
 
 onMounted(async () => {
-  await habitsStore.fetchAll();
-  await Promise.all(
-    habitsWithActions.value.map((h) => trackingStore.loadStatus(h.id, today)),
-  );
-  loading.value = false;
+  try {
+    await habitsStore.fetchAll();
+    await Promise.all(
+      habitsWithActions.value.map((h) => trackingStore.loadStatus(h.id, today)),
+    );
+  } catch {
+    notify('Не удалось загрузить данные');
+  } finally {
+    loading.value = false;
+  }
 });
 </script>

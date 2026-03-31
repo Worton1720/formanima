@@ -1,17 +1,27 @@
 import { Test } from '@nestjs/testing';
 import { TrackingService } from './tracking.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { HabitsService } from '../habits/habits.service';
+import { GamificationService } from '../gamification/gamification.service';
 
 const mockPrisma = {
   completion: {
     upsert: jest.fn(),
     deleteMany: jest.fn(),
     findMany: jest.fn(),
+    count: jest.fn(),
   },
   action: {
     findMany: jest.fn(),
   },
+  habit: { findMany: jest.fn() },
+  userAchievement: { findMany: jest.fn(), upsert: jest.fn() },
+  userRank: { upsert: jest.fn() },
 };
+
+const mockHabits = { findOne: jest.fn() };
+
+const mockGamification = { recalculate: jest.fn(), getProfile: jest.fn() };
 
 describe('TrackingService', () => {
   let service: TrackingService;
@@ -21,6 +31,8 @@ describe('TrackingService', () => {
       providers: [
         TrackingService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: HabitsService, useValue: mockHabits },
+        { provide: GamificationService, useValue: mockGamification },
       ],
     }).compile();
     service = module.get(TrackingService);
@@ -29,6 +41,15 @@ describe('TrackingService', () => {
 
   it('complete creates completion with normalized date', async () => {
     mockPrisma.completion.upsert.mockResolvedValue({ id: 'c1' });
+    mockPrisma.completion.count.mockResolvedValue(1);
+    mockPrisma.habit.findMany.mockResolvedValue([]);
+    mockPrisma.completion.findMany.mockResolvedValue([]);
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    mockPrisma.userAchievement.upsert.mockResolvedValue({});
+    mockPrisma.userRank.upsert.mockResolvedValue({ xp: 10, level: 1, totalStrikes: 1, rank: 'apprentice' });
+    mockGamification.recalculate.mockResolvedValue(undefined);
+    mockGamification.getProfile.mockResolvedValue({ xp: 10, level: 1, totalStrikes: 1, rank: 'apprentice', achievements: [] });
+
     const date = '2026-03-28';
     await service.complete('u1', 'a1', date);
 
@@ -38,6 +59,7 @@ describe('TrackingService', () => {
   });
 
   it('getStatusForDate returns completion map for habit actions', async () => {
+    mockHabits.findOne.mockResolvedValue({ id: 'h1', userId: 'u1' });
     mockPrisma.action.findMany.mockResolvedValue([{ id: 'a1' }, { id: 'a2' }]);
     mockPrisma.completion.findMany.mockResolvedValue([{ actionId: 'a1' }]);
 

@@ -38,7 +38,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="showAddAction = false">Отмена</v-btn>
-          <v-btn color="primary" @click="addAction">Добавить</v-btn>
+          <v-btn color="primary" :loading="addingAction" @click="addAction">Добавить</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -74,6 +74,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { habitsApi } from '../api/habits.api';
 import { statsApi } from '../api/stats.api';
+import { useNotify } from '../composables/useNotify';
 import client from '../api/client';
 import type { Habit, StreakStats } from '../types';
 
@@ -83,29 +84,46 @@ const habit = ref<Habit | null>(null);
 const streak = ref<StreakStats | null>(null);
 const showAddAction = ref(false);
 const newActionTitle = ref('');
+const addingAction = ref(false);
+const { notify } = useNotify();
 
 onMounted(async () => {
-  [habit.value, streak.value] = await Promise.all([
-    habitsApi.getOne(id),
-    statsApi.getStreak(id),
-  ]);
+  try {
+    [habit.value, streak.value] = await Promise.all([
+      habitsApi.getOne(id),
+      statsApi.getStreak(id),
+    ]);
+  } catch {
+    notify('Не удалось загрузить данные привычки');
+  }
 });
 
 async function addAction() {
   if (!newActionTitle.value.trim()) return;
-  const order = habit.value?.actions.length ?? 0;
-  const action = await client
-    .post(`/habits/${id}/actions`, { title: newActionTitle.value.trim(), order })
-    .then((r) => r.data);
-  habit.value?.actions.push(action);
-  newActionTitle.value = '';
-  showAddAction.value = false;
+  addingAction.value = true;
+  try {
+    const order = habit.value?.actions.length ?? 0;
+    const action = await client
+      .post(`/habits/${id}/actions`, { title: newActionTitle.value.trim(), order })
+      .then((r) => r.data);
+    habit.value?.actions.push(action);
+    newActionTitle.value = '';
+    showAddAction.value = false;
+  } catch {
+    notify('Не удалось добавить действие');
+  } finally {
+    addingAction.value = false;
+  }
 }
 
 async function removeAction(actionId: string) {
-  await client.delete(`/habits/${id}/actions/${actionId}`);
-  if (habit.value) {
-    habit.value.actions = habit.value.actions.filter((a) => a.id !== actionId);
+  try {
+    await client.delete(`/habits/${id}/actions/${actionId}`);
+    if (habit.value) {
+      habit.value.actions = habit.value.actions.filter((a) => a.id !== actionId);
+    }
+  } catch {
+    notify('Не удалось удалить действие');
   }
 }
 </script>

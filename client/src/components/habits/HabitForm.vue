@@ -22,7 +22,25 @@
           label="Частота"
           class="mb-2"
         />
-        <v-text-field v-model="form.color" label="Цвет" type="color" class="mb-4" />
+        <v-text-field v-model="form.color" label="Цвет" type="color" class="mb-2" />
+        <v-select
+          v-model="form.icon"
+          :items="icons"
+          label="Иконка"
+          class="mb-4"
+        >
+          <template #item="{ item, props: itemProps }">
+            <v-list-item v-bind="itemProps">
+              <template #prepend>
+                <v-icon :icon="item.value" class="mr-2" />
+              </template>
+            </v-list-item>
+          </template>
+          <template #selection="{ item }">
+            <v-icon :icon="item.value" class="mr-2" />
+            {{ item.title }}
+          </template>
+        </v-select>
         <div class="d-flex gap-2 justify-end">
           <v-btn variant="text" @click="$emit('cancel')">Отмена</v-btn>
           <v-btn type="submit" color="primary" :loading="loading">Сохранить</v-btn>
@@ -52,6 +70,23 @@ const frequencies = [
   { title: 'По будням', value: 'weekdays' },
   { title: 'Кастомная', value: 'custom' },
 ];
+const icons = [
+  { title: 'Огонь', value: 'mdi-fire' },
+  { title: 'Сердце', value: 'mdi-heart' },
+  { title: 'Звезда', value: 'mdi-star' },
+  { title: 'Гантеля', value: 'mdi-dumbbell' },
+  { title: 'Книга', value: 'mdi-book-open-variant' },
+  { title: 'Бег', value: 'mdi-run' },
+  { title: 'Еда', value: 'mdi-food-apple' },
+  { title: 'Вода', value: 'mdi-cup-water' },
+  { title: 'Медитация', value: 'mdi-meditation' },
+  { title: 'Велосипед', value: 'mdi-bike' },
+  { title: 'Музыка', value: 'mdi-music' },
+  { title: 'Код', value: 'mdi-code-braces' },
+  { title: 'Деньги', value: 'mdi-cash' },
+  { title: 'Сон', value: 'mdi-sleep' },
+  { title: 'Кисть', value: 'mdi-brush' },
+];
 
 const loading = ref(false);
 const form = ref({
@@ -60,6 +95,7 @@ const form = ref({
   category: props.habit?.category ?? 'other',
   frequency: props.habit?.frequency ?? 'daily',
   color: props.habit?.color ?? '#6366f1',
+  icon: props.habit?.icon ?? 'mdi-fire',
 });
 
 watch(() => props.habit, (h) => {
@@ -70,6 +106,7 @@ watch(() => props.habit, (h) => {
       category: h.category,
       frequency: h.frequency,
       color: h.color,
+      icon: h.icon ?? 'mdi-fire',
     };
   }
 });

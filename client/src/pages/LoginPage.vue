@@ -5,13 +5,13 @@
         <v-card elevation="8" rounded="xl">
           <v-card-title class="text-h5 pa-6 text-center">FORMANIMA</v-card-title>
           <v-card-text>
-            <v-form @submit.prevent="submit">
+            <v-form ref="form" @submit.prevent="submit">
               <v-text-field
                 v-model="email"
                 label="Email"
                 type="email"
                 prepend-inner-icon="mdi-email"
-                :rules="[v => !!v || 'Обязательно']"
+                :rules="emailRules"
                 class="mb-2"
               />
               <v-text-field
@@ -19,7 +19,7 @@
                 label="Пароль"
                 type="password"
                 prepend-inner-icon="mdi-lock"
-                :rules="[v => !!v || 'Обязательно']"
+                :rules="[v => !!v || 'Введите пароль']"
                 class="mb-4"
               />
               <v-alert v-if="error" type="error" class="mb-4" density="compact">{{ error }}</v-alert>
@@ -45,19 +45,35 @@ import { useAuthStore } from '../stores/auth.store';
 
 const auth = useAuthStore();
 const router = useRouter();
+const form = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
 const email = ref('');
 const password = ref('');
 const loading = ref(false);
 const error = ref('');
 
+const emailRules = [
+  (v: string) => !!v || 'Введите email',
+  (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'Некорректный email',
+];
+
 async function submit() {
+  const { valid } = await form.value!.validate();
+  if (!valid) return;
+
   loading.value = true;
   error.value = '';
   try {
     await auth.login(email.value, password.value);
     router.push('/dashboard');
-  } catch {
-    error.value = 'Неверный email или пароль';
+  } catch (e: any) {
+    const status = e?.response?.status;
+    if (status === 401) {
+      error.value = 'Неверный email или пароль';
+    } else if (status === 400) {
+      error.value = 'Проверьте правильность введённых данных';
+    } else {
+      error.value = 'Ошибка сервера. Попробуйте позже';
+    }
   } finally {
     loading.value = false;
   }

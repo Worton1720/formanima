@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -34,8 +34,30 @@ export class AuthService {
     return this.issueTokens(user.id, user.email);
   }
 
-  async refresh(userId: string, email: string) {
-    return this.issueTokens(userId, email);
+  async refresh(refreshToken: string) {
+    let payload: { sub: string; email: string };
+    try {
+      payload = await this.jwt.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user?.refreshToken) throw new ForbiddenException('Refresh token revoked');
+
+    const valid = await bcrypt.compare(refreshToken, user.refreshToken);
+    if (!valid) throw new ForbiddenException('Refresh token mismatch');
+
+    return this.issueTokens(user.id, user.email);
+  }
+
+  async getMe(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, createdAt: true },
+    });
   }
 
   async logout(userId: string) {

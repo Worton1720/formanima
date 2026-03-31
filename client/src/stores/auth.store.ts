@@ -4,24 +4,43 @@ import { authApi } from '../api/auth.api';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(localStorage.getItem('accessToken'));
+  const refreshToken = ref<string | null>(localStorage.getItem('refreshToken'));
   const userId = ref<string | null>(localStorage.getItem('userId'));
+  const userName = ref<string | null>(localStorage.getItem('userName'));
+  const userEmail = ref<string | null>(localStorage.getItem('userEmail'));
 
   const isAuthenticated = computed(() => !!accessToken.value);
 
-  async function login(email: string, password: string) {
-    const data = await authApi.login({ email, password });
+  function saveTokens(data: { accessToken: string; refreshToken: string; userId: string }) {
     accessToken.value = data.accessToken;
+    refreshToken.value = data.refreshToken;
     userId.value = data.userId;
     localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('userId', data.userId);
+  }
+
+  async function login(email: string, password: string) {
+    const data = await authApi.login({ email, password });
+    saveTokens(data);
+    userEmail.value = email;
+    localStorage.setItem('userEmail', email);
   }
 
   async function register(email: string, password: string, name: string) {
     const data = await authApi.register({ email, password, name });
-    accessToken.value = data.accessToken;
-    userId.value = data.userId;
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('userId', data.userId);
+    saveTokens(data);
+    userName.value = name;
+    userEmail.value = email;
+    localStorage.setItem('userName', name);
+    localStorage.setItem('userEmail', email);
+  }
+
+  async function refresh() {
+    const token = refreshToken.value;
+    if (!token) throw new Error('No refresh token');
+    const data = await authApi.refresh(token);
+    saveTokens(data);
   }
 
   async function logout() {
@@ -31,10 +50,16 @@ export const useAuthStore = defineStore('auth', () => {
       // ignore errors on logout
     }
     accessToken.value = null;
+    refreshToken.value = null;
     userId.value = null;
+    userName.value = null;
+    userEmail.value = null;
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
   }
 
-  return { accessToken, userId, isAuthenticated, login, register, logout };
+  return { accessToken, refreshToken, userId, userName, userEmail, isAuthenticated, login, register, refresh, logout };
 });

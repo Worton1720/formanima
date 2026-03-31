@@ -27,6 +27,11 @@ const router = createRouter({
       component: () => import('../pages/ProfilePage.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/achievements',
+      component: () => import('../pages/AchievementsPage.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
@@ -34,6 +39,9 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return '/login';
+  }
+  if ((to.path === '/login' || to.path === '/register') && auth.isAuthenticated) {
+    return '/dashboard';
   }
 });
 
