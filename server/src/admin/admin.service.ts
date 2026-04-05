@@ -1,0 +1,70 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class AdminService {
+  constructor(private prisma: PrismaService) {}
+
+  async getUsers() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        _count: { select: { habits: true } },
+        rank: { select: { totalStrikes: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      createdAt: u.createdAt,
+      habitsCount: u._count.habits,
+      strikesCount: u.rank?.totalStrikes ?? 0,
+    }));
+  }
+
+  async blockUser(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    return this.prisma.user.update({
+      where: { id },
+      data: { role: 'blocked' },
+      select: { id: true, email: true, role: true },
+    });
+  }
+
+  async deleteUser(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    await this.prisma.user.delete({ where: { id } });
+    return { deleted: true };
+  }
+
+  async getSystemStats() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date(todayStr + 'T00:00:00.000Z');
+
+    const [totalUsers, totalHabits, totalStrikes, activeTodayGroups] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.habit.count({ where: { isArchived: false } }),
+      this.prisma.completion.count(),
+      this.prisma.completion.groupBy({
+        by: ['userId'],
+        where: { date: { gte: today } },
+      }),
+    ]);
+
+    return {
+      totalUsers,
+      totalHabits,
+      totalCompletions: totalStrikes,
+      activeToday: activeTodayGroups.length,
+    };
+  }
+}

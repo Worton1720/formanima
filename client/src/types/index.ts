@@ -1,7 +1,10 @@
+export type UserRole = 'user' | 'admin' | 'blocked';
+
 export interface User {
   id: string;
   email: string;
   name: string;
+  role?: UserRole;
 }
 
 export interface Action {
@@ -61,4 +64,26 @@ export interface GamificationProfile {
   totalStrikes: number;
   rank: 'apprentice' | 'journeyman' | 'master' | 'grandmaster';
   achievements: AchievementStatus[];
+}
+
+export interface HeatmapEntry {
+  date: string;
+  completed: boolean;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: string;
+  habitsCount: number;
+  strikesCount: number;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalHabits: number;
+  totalCompletions: number;
+  activeToday: number;
 }

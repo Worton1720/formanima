@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { authApi } from '../api/auth.api';
+import type { UserRole } from '../types';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(localStorage.getItem('accessToken'));
@@ -8,6 +9,7 @@ export const useAuthStore = defineStore('auth', () => {
   const userId = ref<string | null>(localStorage.getItem('userId'));
   const userName = ref<string | null>(localStorage.getItem('userName'));
   const userEmail = ref<string | null>(localStorage.getItem('userEmail'));
+  const userRole = ref<UserRole | null>(localStorage.getItem('userRole') as UserRole | null);
 
   const isAuthenticated = computed(() => !!accessToken.value);
 
@@ -25,6 +27,16 @@ export const useAuthStore = defineStore('auth', () => {
     saveTokens(data);
     userEmail.value = email;
     localStorage.setItem('userEmail', email);
+    try {
+      const me = await authApi.getMe();
+      userRole.value = me.role ?? 'user';
+      localStorage.setItem('userRole', userRole.value);
+      userName.value = me.name;
+      localStorage.setItem('userName', me.name);
+    } catch {
+      userRole.value = 'user';
+      localStorage.setItem('userRole', 'user');
+    }
   }
 
   async function register(email: string, password: string, name: string) {
@@ -34,6 +46,8 @@ export const useAuthStore = defineStore('auth', () => {
     userEmail.value = email;
     localStorage.setItem('userName', name);
     localStorage.setItem('userEmail', email);
+    userRole.value = 'user';
+    localStorage.setItem('userRole', 'user');
   }
 
   async function refresh() {
@@ -54,12 +68,14 @@ export const useAuthStore = defineStore('auth', () => {
     userId.value = null;
     userName.value = null;
     userEmail.value = null;
+    userRole.value = null;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
   }
 
-  return { accessToken, refreshToken, userId, userName, userEmail, isAuthenticated, login, register, refresh, logout };
+  return { accessToken, refreshToken, userId, userName, userEmail, userRole, isAuthenticated, login, register, refresh, logout };
 });

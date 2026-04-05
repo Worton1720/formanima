@@ -6,8 +6,9 @@ import { ActionsModule } from './actions/actions.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { StatsModule } from './stats/stats.module';
 import { GamificationModule } from './gamification/gamification.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, HabitsModule, ActionsModule, TrackingModule, StatsModule, GamificationModule],
+  imports: [PrismaModule, AuthModule, HabitsModule, ActionsModule, TrackingModule, StatsModule, GamificationModule, AdminModule],
 })
 export class AppModule {}

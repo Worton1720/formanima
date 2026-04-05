@@ -6,6 +6,13 @@
       <v-list density="compact" nav>
         <v-list-item prepend-icon="mdi-view-dashboard" title="Дашборд" to="/dashboard" />
         <v-list-item prepend-icon="mdi-format-list-checks" title="Привычки" to="/habits" />
+        <v-list-item prepend-icon="mdi-chart-bar" title="Аналитика" to="/analytics" />
+        <v-list-item
+          v-if="auth.userRole === 'admin'"
+          prepend-icon="mdi-shield-crown"
+          title="Админ"
+          to="/admin"
+        />
         <v-list-item prepend-icon="mdi-account" title="Профиль" to="/profile" />
         <v-list-item prepend-icon="mdi-trophy" title="Достижения" to="/achievements" value="achievements" />
       </v-list>

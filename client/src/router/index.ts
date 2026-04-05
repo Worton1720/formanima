@@ -1,6 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
 
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean;
+    requiresAdmin?: boolean;
+  }
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -32,6 +39,16 @@ const router = createRouter({
       component: () => import('../pages/AchievementsPage.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/analytics',
+      component: () => import('../pages/AnalyticsPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin',
+      component: () => import('../pages/AdminPage.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
   ],
 });
 
@@ -39,6 +56,9 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return '/login';
+  }
+  if (to.meta.requiresAdmin && auth.userRole !== 'admin') {
+    return '/dashboard';
   }
   if ((to.path === '/login' || to.path === '/register') && auth.isAuthenticated) {
     return '/dashboard';
