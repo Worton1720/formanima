@@ -16,4 +16,15 @@ export class StatsController {
   getOverview(@Query('days') days: string, @Request() req: any) {
     return this.stats.getOverview(req.user.userId, days ? parseInt(days) : 7);
   }
+
+  @Get('heatmap/:habitId')
+  getHeatmap(
+    @Param('habitId') habitId: string,
+    @Query('days') days: string,
+    @Request() req: any,
+  ) {
+    const parsedDays = days ? parseInt(days, 10) : 90;
+    const clampedDays = isNaN(parsedDays) || parsedDays <= 0 ? 90 : Math.min(parsedDays, 365);
+    return this.stats.getHeatmap(habitId, req.user.userId, clampedDays);
+  }
 }

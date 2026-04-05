@@ -108,4 +108,50 @@ export class StatsService {
 
     return results;
   }
+
+  async getHeatmap(
+    habitId: string,
+    userId: string,
+    days = 90,
+  ): Promise<{ date: string; completed: boolean }[]> {
+    await this.habits.findOne(habitId, userId);
+    const actions = await this.prisma.action.findMany({ where: { habitId } });
+
+    const dateRange = this.buildDateRange(days);
+
+    if (actions.length === 0) {
+      return dateRange.map((date) => ({ date, completed: false }));
+    }
+
+    const actionIds = actions.map((a) => a.id);
+    const from = new Date(dateRange[0] + 'T00:00:00.000Z');
+
+    const completions = await this.prisma.completion.findMany({
+      where: { userId, actionId: { in: actionIds }, date: { gte: from } },
+      select: { date: true, actionId: true },
+    });
+
+    const byDate = new Map<string, Set<string>>();
+    for (const c of completions) {
+      const key = c.date.toISOString().split('T')[0];
+      if (!byDate.has(key)) byDate.set(key, new Set());
+      byDate.get(key)!.add(c.actionId);
+    }
+
+    return dateRange.map((date) => {
+      const set = byDate.get(date);
+      const completed = set ? actionIds.every((id) => set.has(id)) : false;
+      return { date, completed };
+    });
+  }
+
+  private buildDateRange(days: number): string[] {
+    const result: string[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      result.push(d.toISOString().split('T')[0]);
+    }
+    return result;
+  }
 }
