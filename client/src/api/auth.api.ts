@@ -14,4 +14,6 @@ export const authApi = {
   getMe: () => client.get<User>('/auth/me').then((r) => r.data),
 
   logout: () => client.post('/auth/logout'),
+  updateProfile: (data: { name: string }) =>
+    client.patch<User>('/auth/profile', data).then((r) => r.data),
 };
