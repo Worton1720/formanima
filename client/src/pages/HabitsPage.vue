@@ -2,8 +2,18 @@
   <v-container>
     <div class="d-flex align-center mb-6">
       <h1 class="text-h5">Мои привычки</h1>
+      <v-chip class="ml-3" size="small" variant="tonal" color="primary">
+        {{ store.habits.length }}/10
+      </v-chip>
       <v-spacer />
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="showForm = true">Добавить</v-btn>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        :disabled="store.habits.length >= 10"
+        @click="showForm = true"
+      >
+        Добавить
+      </v-btn>
     </div>
 
     <v-dialog v-model="showForm" max-width="500">
@@ -66,8 +76,9 @@ async function onSubmit(data: Partial<Habit>) {
       await store.create(data);
     }
     closeForm();
-  } catch {
-    notify('Не удалось сохранить привычку');
+  } catch (e: any) {
+    const msg = e?.response?.data?.message;
+    notify(typeof msg === 'string' ? msg : 'Не удалось сохранить привычку');
   }
 }
 

@@ -31,6 +31,8 @@
 
     <GamificationWidget />
 
+    <MotivationCard />
+
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
     <v-row v-if="habitsWithActions.length">
@@ -63,6 +65,7 @@ import { useTrackingStore } from '../stores/tracking.store';
 import { useNotify } from '../composables/useNotify';
 import DailyHabitCard from '../components/tracking/DailyHabitCard.vue';
 import GamificationWidget from '../components/gamification/GamificationWidget.vue';
+import MotivationCard from '../components/common/MotivationCard.vue';
 
 dayjs.locale('ru');
 

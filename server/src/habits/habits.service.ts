@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
@@ -32,7 +32,13 @@ export class HabitsService {
     return habit;
   }
 
-  create(userId: string, dto: CreateHabitDto) {
+  async create(userId: string, dto: CreateHabitDto) {
+    const count = await this.prisma.habit.count({
+      where: { userId, isArchived: false },
+    });
+    if (count >= 10) {
+      throw new BadRequestException('Habit limit reached (maximum 10 active habits)');
+    }
     return this.prisma.habit.create({
       data: { ...dto, userId },
       include: { actions: true },
