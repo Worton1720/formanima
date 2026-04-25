@@ -6,6 +6,7 @@ import type { GamificationProfile } from '../types';
 export const useGamificationStore = defineStore('gamification', () => {
   const profile = ref<GamificationProfile | null>(null);
   const loading = ref(false);
+  const burstData = ref<GamificationProfile | null>(null);
 
   async function fetchProfile() {
     loading.value = true;
@@ -26,5 +27,12 @@ export const useGamificationStore = defineStore('gamification', () => {
     () => profile.value?.achievements.filter((a) => a.unlocked) ?? [],
   );
 
-  return { profile, loading, fetchProfile, setProfile, rank, level, unlockedAchievements };
+  function showBurst(data: GamificationProfile) {
+    burstData.value = data;
+  }
+  function clearBurst() {
+    burstData.value = null;
+  }
+
+  return { profile, loading, burstData, fetchProfile, setProfile, showBurst, clearBurst, rank, level, unlockedAchievements };
 });

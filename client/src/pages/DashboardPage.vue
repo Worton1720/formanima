@@ -1,110 +1,139 @@
 <template>
   <v-container>
-    <div class="d-flex align-center mb-2">
-      <h1 class="text-h5">Дашборд</h1>
-      <v-spacer />
-      <v-btn icon="mdi-logout" variant="text" @click="logout" />
-    </div>
-    <p class="text-body-2 text-medium-emphasis mb-6">{{ formattedDate }}</p>
+    <p class="text-body-2 text-medium-emphasis mb-4">{{ formattedDate }}</p>
 
-    <v-row class="mb-4">
-      <v-col cols="12">
-        <v-card rounded="xl" color="primary" variant="tonal">
-          <v-card-text class="d-flex align-center">
-            <div>
-              <div class="text-h4 font-weight-bold">{{ totalCompleted }}/{{ totalActions }}</div>
-              <div class="text-body-2">действий выполнено сегодня</div>
-            </div>
-            <v-spacer />
-            <v-progress-circular
-              :model-value="overallProgress"
-              color="primary"
-              size="64"
-              width="6"
-            >
-              {{ overallProgress }}%
-            </v-progress-circular>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <GamificationWidget />
-
-    <MotivationCard />
+    <GamificationHero />
 
     <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
 
-    <v-row v-if="habitsWithActions.length">
-      <v-col v-for="habit in habitsWithActions" :key="habit.id" cols="12" md="6">
-        <DailyHabitCard :habit="habit" :date="today" />
-      </v-col>
-    </v-row>
+    <!-- Smart Empty State: нет привычек -->
+    <template v-if="!loading && habitsStore.habits.length === 0">
+      <div class="text-center py-10">
+        <div style="font-size: 64px; margin-bottom: 16px;">⚒️</div>
+        <h2 class="text-h6 font-weight-bold mb-2">Добро пожаловать в FORMANIMA</h2>
+        <p class="text-body-2 text-medium-emphasis mb-6">
+          Создай первую привычку, чтобы начать ковать характер
+        </p>
+        <v-btn color="primary" size="large" prepend-icon="mdi-plus" @click="showForm = true">
+          Создать первую привычку
+        </v-btn>
+        <div class="mt-3">
+          <v-btn variant="text" size="small" to="/">Посмотри как это работает →</v-btn>
+        </div>
+      </div>
+    </template>
 
-    <v-empty-state
-      v-else-if="!loading"
-      icon="mdi-fire"
-      title="Нет привычек"
-      text="Перейдите в раздел привычек, чтобы создать первую"
-    >
-      <template #actions>
-        <v-btn color="primary" to="/habits">Управление привычками</v-btn>
-      </template>
-    </v-empty-state>
+    <!-- Привычки без действий -->
+    <template v-else-if="!loading && habitsWithActions.length === 0">
+      <v-list-item
+        v-for="habit in habitsStore.habits"
+        :key="habit.id"
+        :to="`/habits/${habit.id}`"
+        rounded="xl"
+        class="mb-2"
+        style="border: 1px solid rgba(255,255,255,0.08);"
+      >
+        <template #prepend>
+          <v-icon :icon="habit.icon" :color="habit.color" />
+        </template>
+        <v-list-item-title>{{ habit.title }}</v-list-item-title>
+        <v-list-item-subtitle>Добавь действия, чтобы начать отслеживать →</v-list-item-subtitle>
+      </v-list-item>
+    </template>
+
+    <!-- Список привычек: невыполненные вверху -->
+    <template v-else-if="!loading">
+      <v-list class="pa-0">
+        <DailyHabitRow
+          v-for="habit in sortedHabits"
+          :key="habit.id"
+          :habit="habit"
+          :date="today"
+          :streak="streakMap[habit.id]"
+        />
+      </v-list>
+    </template>
+
+    <MotivationCard class="mt-4" />
+
+    <!-- Диалог создания привычки (для Smart Empty State) -->
+    <v-dialog v-model="showForm" max-width="560">
+      <HabitForm @submit="onCreateHabit" @cancel="showForm = false" />
+    </v-dialog>
+
+    <XpBurstDialog />
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
-import { useAuthStore } from '../stores/auth.store';
 import { useHabitsStore } from '../stores/habits.store';
 import { useTrackingStore } from '../stores/tracking.store';
+import { statsApi } from '../api/stats.api';
 import { useNotify } from '../composables/useNotify';
-import DailyHabitCard from '../components/tracking/DailyHabitCard.vue';
-import GamificationWidget from '../components/gamification/GamificationWidget.vue';
+import client from '../api/client';
+import GamificationHero from '../components/gamification/GamificationHero.vue';
+import DailyHabitRow from '../components/tracking/DailyHabitRow.vue';
 import MotivationCard from '../components/common/MotivationCard.vue';
+import HabitForm from '../components/habits/HabitForm.vue';
+import XpBurstDialog from '../components/common/XpBurstDialog.vue';
+import type { Habit } from '../types';
 
 dayjs.locale('ru');
 
-const auth = useAuthStore();
 const habitsStore = useHabitsStore();
 const trackingStore = useTrackingStore();
-const router = useRouter();
 const { notify } = useNotify();
 const loading = ref(true);
+const showForm = ref(false);
 const today = dayjs().format('YYYY-MM-DD');
 const formattedDate = dayjs().format('dddd, D MMMM YYYY');
+const streakMap = ref<Record<string, number>>({});
 
 const habitsWithActions = computed(() =>
   habitsStore.habits.filter((h) => h.actions && h.actions.length > 0),
 );
-const totalActions = computed(() =>
-  habitsWithActions.value.reduce((acc, h) => acc + h.actions.length, 0),
-);
-const totalCompleted = computed(() =>
-  habitsWithActions.value.reduce((acc, h) => {
-    const status = trackingStore.getStatus(h.id, today);
-    return acc + Object.values(status).filter(Boolean).length;
-  }, 0),
-);
-const overallProgress = computed(() =>
-  totalActions.value ? Math.round((totalCompleted.value / totalActions.value) * 100) : 0,
+
+const sortedHabits = computed(() =>
+  [...habitsWithActions.value].sort((a, b) => {
+    const aStatus = trackingStore.getStatus(a.id, today);
+    const bStatus = trackingStore.getStatus(b.id, today);
+    const aDone = a.actions.every((ac) => aStatus[ac.id] ?? false) ? 1 : 0;
+    const bDone = b.actions.every((ac) => bStatus[ac.id] ?? false) ? 1 : 0;
+    return aDone - bDone;
+  }),
 );
 
-async function logout() {
-  await auth.logout();
-  router.push('/');
+async function onCreateHabit(
+  data: Partial<Habit>,
+  actions: { id?: string; title: string; order: number }[],
+) {
+  try {
+    const habit = await habitsStore.create(data);
+    for (const [i, a] of actions.entries()) {
+      await client.post(`/habits/${habit.id}/actions`, { title: a.title, order: i });
+    }
+    await habitsStore.fetchAll();
+    await trackingStore.loadStatus(habit.id, today);
+    showForm.value = false;
+  } catch {
+    notify('Не удалось создать привычку');
+  }
 }
 
 onMounted(async () => {
   try {
     await habitsStore.fetchAll();
-    await Promise.all(
-      habitsWithActions.value.map((h) => trackingStore.loadStatus(h.id, today)),
-    );
+    await Promise.all([
+      ...habitsWithActions.value.map((h) => trackingStore.loadStatus(h.id, today)),
+      ...habitsWithActions.value.map((h) =>
+        statsApi.getStreak(h.id).then((s) => {
+          streakMap.value[h.id] = s.current;
+        }),
+      ),
+    ]);
   } catch {
     notify('Не удалось загрузить данные');
   } finally {

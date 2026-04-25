@@ -41,6 +41,7 @@
 import { ref, onMounted } from 'vue';
 import { useHabitsStore } from '../stores/habits.store';
 import { useNotify } from '../composables/useNotify';
+import { actionsApi } from '../api/actions.api';
 import HabitCard from '../components/habits/HabitCard.vue';
 import HabitForm from '../components/habits/HabitForm.vue';
 import type { Habit } from '../types';
@@ -68,13 +69,29 @@ function closeForm() {
   editingHabit.value = undefined;
 }
 
-async function onSubmit(data: Partial<Habit>) {
+async function onSubmit(
+  data: Partial<Habit>,
+  actions: { id?: string; title: string; order: number }[],
+  removedIds: string[],
+) {
   try {
+    let habitId: string;
     if (editingHabit.value) {
       await store.update(editingHabit.value.id, data);
+      habitId = editingHabit.value.id;
     } else {
-      await store.create(data);
+      const habit = await store.create(data);
+      habitId = habit.id;
     }
+
+    await Promise.all(removedIds.map((id) => actionsApi.delete(habitId, id)));
+
+    const newActions = actions.filter((a) => !a.id);
+    for (const a of newActions) {
+      await actionsApi.create(habitId, a.title, actions.indexOf(a));
+    }
+
+    await store.fetchAll();
     closeForm();
   } catch (e: any) {
     const msg = e?.response?.data?.message;

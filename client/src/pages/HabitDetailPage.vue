@@ -4,6 +4,7 @@
       <v-btn icon="mdi-arrow-left" variant="text" to="/habits" />
       <v-icon :icon="habit.icon" :color="habit.color" class="mx-2" />
       <h1 class="text-h5">{{ habit.title }}</h1>
+      <v-btn icon="mdi-pencil" variant="text" size="small" class="ml-2" @click="showEditForm = true" />
     </div>
 
     <v-row class="mb-6">
@@ -20,6 +21,8 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <HeatmapCalendar :habit-id="id" :color="habit.color" class="mb-6" />
 
     <div class="d-flex align-center mb-4">
       <h2 class="text-h6">Действия</h2>
@@ -62,6 +65,11 @@
       title="Нет действий"
       text="Добавьте действия, которые нужно выполнять для поддержания этой привычки"
     />
+
+    <!-- Диалог редактирования привычки -->
+    <v-dialog v-model="showEditForm" max-width="560">
+      <HabitForm v-if="habit" :habit="habit" @submit="onEditSubmit" @cancel="showEditForm = false" />
+    </v-dialog>
   </v-container>
 
   <v-container v-else class="d-flex justify-center align-center" style="height: 50vh">
@@ -73,16 +81,19 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { habitsApi } from '../api/habits.api';
+import { actionsApi } from '../api/actions.api';
 import { statsApi } from '../api/stats.api';
 import { useNotify } from '../composables/useNotify';
-import client from '../api/client';
 import type { Habit, StreakStats } from '../types';
+import HeatmapCalendar from '../components/stats/HeatmapCalendar.vue';
+import HabitForm from '../components/habits/HabitForm.vue';
 
 const route = useRoute();
 const id = route.params.id as string;
 const habit = ref<Habit | null>(null);
 const streak = ref<StreakStats | null>(null);
 const showAddAction = ref(false);
+const showEditForm = ref(false);
 const newActionTitle = ref('');
 const addingAction = ref(false);
 const { notify } = useNotify();
@@ -103,9 +114,7 @@ async function addAction() {
   addingAction.value = true;
   try {
     const order = habit.value?.actions.length ?? 0;
-    const action = await client
-      .post(`/habits/${id}/actions`, { title: newActionTitle.value.trim(), order })
-      .then((r) => r.data);
+    const action = await actionsApi.create(id, newActionTitle.value.trim(), order);
     habit.value?.actions.push(action);
     newActionTitle.value = '';
     showAddAction.value = false;
@@ -118,12 +127,31 @@ async function addAction() {
 
 async function removeAction(actionId: string) {
   try {
-    await client.delete(`/habits/${id}/actions/${actionId}`);
+    await actionsApi.delete(id, actionId);
     if (habit.value) {
       habit.value.actions = habit.value.actions.filter((a) => a.id !== actionId);
     }
   } catch {
     notify('Не удалось удалить действие');
+  }
+}
+
+async function onEditSubmit(
+  data: Partial<Habit>,
+  actions: { id?: string; title: string; order: number }[],
+  removedIds: string[],
+) {
+  try {
+    await habitsApi.update(id, data);
+    await Promise.all(removedIds.map((rid) => actionsApi.delete(id, rid)));
+    const newActions = actions.filter((a) => !a.id);
+    for (const a of newActions) {
+      await actionsApi.create(id, a.title, actions.indexOf(a));
+    }
+    habit.value = await habitsApi.getOne(id);
+    showEditForm.value = false;
+  } catch {
+    notify('Не удалось обновить привычку');
   }
 }
 </script>
