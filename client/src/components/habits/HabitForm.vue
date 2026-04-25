@@ -39,7 +39,7 @@
         </v-divider>
 
         <draggable v-model="localActions" item-key="title" handle=".drag-handle" ghost-class="opacity-50">
-          <template #item="{ element, index }">
+          <template #item="{ index }">
             <div class="d-flex align-center gap-2 mb-2">
               <v-icon
                 class="drag-handle"
