@@ -6,6 +6,29 @@ datasource db {
   provider = "postgresql"
 }
 
+enum GoalType {
+  habit
+  project
+  nutrition
+  finance
+  fitness
+  other
+}
+
+enum MealType {
+  breakfast
+  lunch
+  dinner
+  snack
+}
+
+enum GoalStatus {
+  active
+  completed
+  archived
+  paused
+}
+
 model User {
   id           String            @id @default(cuid())
   email        String            @unique
@@ -15,48 +38,16 @@ model User {
   role         String            @default("user")
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
-  completions  Completion[]
-  habits       Habit[]
-  rank         UserRank?
-  achievements UserAchievement[]
-}
-
-model Habit {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String   @db.VarChar(100)
-  description String?  @db.VarChar(500)
-  category    String   @default("other")
-  frequency   String   @default("daily")
-  color       String   @default("#6366f1")
-  icon        String   @default("mdi-star")
-  isArchived  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  actions     Action[]
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Action {
-  id          String       @id @default(cuid())
-  habitId     String
-  title       String       @db.VarChar(200)
-  order       Int          @default(0)
-  habit       Habit        @relation(fields: [habitId], references: [id], onDelete: Cascade)
-  completions Completion[]
-}
-
-model Completion {
-  id          String   @id @default(cuid())
-  actionId    String
-  userId      String
-  date        DateTime @db.Date
-  completedAt DateTime @default(now())
-  action      Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([actionId, userId, date])
-  @@index([userId, date])
+  rank           UserRank?
+  achievements   UserAchievement[]
+  transactions   Transaction[]
+  budgets        Budget[]
+  savingsGoals   SavingsGoal[]
+  goals          Goal[]
+  goalProgresses GoalProgress[]
+  foodEntries    FoodEntry[]
+  calorieProfile CalorieProfile?
+  habits         Habit[]
 }
 
 model UserRank {
@@ -79,4 +70,165 @@ model UserAchievement {
 
   @@unique([userId, achievementId])
   @@index([userId])
+}
+
+model Transaction {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                String
+  amount              Float
+  category            String
+  description         String?
+  date                DateTime @db.Date
+  createdAt           DateTime @default(now())
+  isRecurring         Boolean  @default(false)
+  recurringInterval   String?
+  recurringParentId   String?
+
+  @@index([userId, date])
+  @@index([userId, isRecurring])
+}
+
+model Budget {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String
+  month     String
+  amount    Float
+  createdAt DateTime @default(now())
+
+  @@unique([userId, category, month])
+  @@index([userId, month])
+}
+
+model SavingsGoal {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String    @db.VarChar(100)
+  targetAmount  Float
+  currentAmount Float     @default(0)
+  deadline      DateTime? @db.Date
+  createdAt     DateTime  @default(now())
+  goalId        String?   @unique
+
+  goal          Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model Goal {
+  id           String         @id @default(cuid())
+  userId       String
+  title        String         @db.VarChar(100)
+  description  String?        @db.VarChar(500)
+  type         GoalType       @default(habit)
+  status       GoalStatus     @default(active)
+  category     String         @default("other")
+  color        String         @default("#6366f1")
+  icon         String         @default("mdi-star")
+  targetValue  Float?
+  currentValue Float          @default(0)
+  frequency    String         @default("daily")
+  deadline     DateTime?      @db.Date
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones   Milestone[]
+  progresses   GoalProgress[]
+  savingsGoal  SavingsGoal?
+
+  @@index([userId, status])
+  @@index([userId, type])
+}
+
+model Milestone {
+  id          String         @id @default(cuid())
+  goalId      String
+  title       String         @db.VarChar(200)
+  description String?        @db.VarChar(500)
+  order       Int            @default(0)
+  isDone      Boolean        @default(false)
+  doneAt      DateTime?
+  createdAt   DateTime       @default(now())
+  goal        Goal           @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  progresses  GoalProgress[]
+
+  @@index([goalId])
+}
+
+model GoalProgress {
+  id          String     @id @default(cuid())
+  goalId      String
+  userId      String
+  milestoneId String?
+  date        DateTime   @db.Date
+  value       Float      @default(1)
+  note        String?    @db.VarChar(300)
+  completedAt DateTime   @default(now())
+  goal        Goal       @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone   Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([goalId, date])
+}
+
+model FoodEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String   @db.VarChar(200)
+  mealType  MealType
+  calories  Float
+  protein   Float    @default(0)
+  fat       Float    @default(0)
+  carbs     Float    @default(0)
+  weight    Float?
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, mealType, date])
+}
+
+model CalorieProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  targetCalories Float    @default(2000)
+  targetProtein  Float    @default(150)
+  targetFat      Float    @default(65)
+  targetCarbs    Float    @default(250)
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  category    String
+  frequency   String
+  color       String
+  icon        String
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actions     Action[]
+
+  @@index([userId])
+}
+
+model Action {
+  id      String @id @default(cuid())
+  habitId String
+  title   String
+  order   Int
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@index([habitId])
 }

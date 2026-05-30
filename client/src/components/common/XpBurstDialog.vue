@@ -1,31 +1,25 @@
 <template>
-  <v-dialog v-model="visible" max-width="280" :scrim="false">
-    <v-card rounded="xl" class="text-center pa-6" style="border: 2px solid #6366f1; box-shadow: 0 0 30px rgba(99,102,241,0.4);">
-      <div style="font-size: 40px; margin-bottom: 8px;">⚒️ ✨</div>
-      <div class="text-h6 font-weight-bold mb-1">Выполнено!</div>
-      <div class="text-h4 font-weight-bold mb-1" style="color: #6366f1;">+10 XP</div>
-      <div v-if="totalStrikes >= 2" class="text-body-2 text-medium-emphasis mb-4">
+  <UiDialog v-model="visible" max-width="sm">
+    <div class="p-6 text-center" style="border: 2px solid #6366f1; border-radius: 1rem; box-shadow: 0 0 30px rgba(99,102,241,0.3);">
+      <div class="text-4xl mb-3">⚒️ ✨</div>
+      <h3 class="text-lg font-bold mb-1">Выполнено!</h3>
+      <p class="text-3xl font-bold mb-1" style="color: #6366f1;">+10 XP</p>
+      <p v-if="totalStrikes >= 2" class="text-sm mb-4" style="color: rgba(255,255,255,0.5);">
         Streak: {{ totalStrikes }} дней 🔥
-      </div>
+      </p>
       <div v-else class="mb-4" />
-      <v-progress-linear
-        :model-value="xpPercent"
-        color="primary"
-        bg-color="surface-variant"
-        rounded
-        height="8"
-        class="mb-1"
-      />
-      <div class="text-caption text-medium-emphasis">
+      <UiProgress :model-value="xpPercent" height="sm" class="mb-2" />
+      <p class="text-xs" style="color: rgba(255,255,255,0.5);">
         {{ gamification.burstData?.xpCurrentLevel ?? 0 }}/{{ gamification.burstData?.xpToNextLevel ?? 100 }} XP до Ур.{{ gamification.burstData?.level ?? 1 }}
-      </div>
-    </v-card>
-  </v-dialog>
+      </p>
+    </div>
+  </UiDialog>
 </template>
 
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue';
 import { useGamificationStore } from '../../stores/gamification.store';
+import { UiDialog, UiProgress } from '../ui';
 
 const gamification = useGamificationStore();
 const visible = ref(false);

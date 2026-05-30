@@ -1,14 +1,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import App from './App.vue';
 import router from './router';
-import vuetify from './plugins/vuetify';
+import App from './App.vue';
+import './styles/main.css';
 
-const app = createApp(App).use(createPinia()).use(router).use(vuetify);
-
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'light') {
-  vuetify.theme.global.name.value = 'light';
-}
-
-app.mount('#app');
+createApp(App).use(createPinia()).use(router).mount('#app');

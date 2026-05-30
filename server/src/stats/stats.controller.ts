@@ -17,6 +17,11 @@ export class StatsController {
     return this.stats.getOverview(req.user.userId, days ? parseInt(days) : 7);
   }
 
+  @Get('daily')
+  getDailyStats(@Query('days') days: string, @Request() req: any) {
+    return this.stats.getDailyStats(req.user.userId, days ? parseInt(days, 10) : 30);
+  }
+
   @Get('heatmap/:habitId')
   getHeatmap(
     @Param('habitId') habitId: string,

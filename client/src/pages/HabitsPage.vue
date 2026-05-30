@@ -1,47 +1,54 @@
 <template>
-  <v-container>
-    <div class="d-flex align-center mb-6">
-      <h1 class="text-h5">Мои привычки</h1>
-      <v-chip class="ml-3" size="small" variant="tonal" color="primary">
-        {{ store.habits.length }}/10
-      </v-chip>
-      <v-spacer />
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        :disabled="store.habits.length >= 10"
-        @click="showForm = true"
-      >
+  <div class="max-w-4xl mx-auto px-4 py-6 min-h-[calc(100vh-3.5rem)] flex flex-col">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold">Мои привычки</h1>
+        <span class="px-2 py-0.5 rounded-full text-xs font-medium" style="background: rgba(99,102,241,0.15); color: #6366f1;">
+          {{ store.habits.length }}/10
+        </span>
+      </div>
+      <UiButton :disabled="store.habits.length >= 10" @click="showForm = true">
+        <Plus class="w-4 h-4 mr-1" />
         Добавить
-      </v-btn>
+      </UiButton>
     </div>
 
-    <v-dialog v-model="showForm" max-width="500">
+    <UiDialog v-model="showForm" max-width="lg">
       <HabitForm :habit="editingHabit" @submit="onSubmit" @cancel="closeForm" />
-    </v-dialog>
+    </UiDialog>
 
-    <v-progress-linear v-if="store.loading" indeterminate color="primary" class="mb-4" />
+    <div v-if="store.loading" class="flex justify-center py-8">
+      <UiSpinner />
+    </div>
 
-    <v-row v-if="store.habits.length">
-      <v-col v-for="habit in store.habits" :key="habit.id" cols="12" md="6" lg="4">
-        <HabitCard :habit="habit" @edit="startEdit" @archive="archiveHabit" />
-      </v-col>
-    </v-row>
+    <div v-else-if="store.habits.length" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+      <HabitCard
+        v-for="habit in store.habits"
+        :key="habit.id"
+        :habit="habit"
+        @edit="startEdit"
+        @archive="archiveHabit"
+      />
+    </div>
 
-    <v-empty-state
-      v-else-if="!store.loading"
-      icon="mdi-fire"
-      title="Нет привычек"
-      text="Создайте первую привычку, чтобы начать"
-    />
-  </v-container>
+    <div v-else class="flex-1 flex flex-col items-center justify-center text-center py-8">
+      <Flame class="w-12 h-12 mx-auto mb-4" style="color: rgba(255,255,255,0.2);" />
+      <h3 class="text-lg font-medium mb-2">Нет привычек</h3>
+      <p class="text-sm mb-6" style="color: rgba(255,255,255,0.4);">Создайте первую привычку, чтобы начать</p>
+      <UiButton @click="showForm = true">
+        <Plus class="w-4 h-4 mr-1" /> Создать привычку
+      </UiButton>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { Plus, Flame } from 'lucide-vue-next';
 import { useHabitsStore } from '../stores/habits.store';
 import { useNotify } from '../composables/useNotify';
 import { actionsApi } from '../api/actions.api';
+import { UiButton, UiDialog, UiSpinner } from '../components/ui';
 import HabitCard from '../components/habits/HabitCard.vue';
 import HabitForm from '../components/habits/HabitForm.vue';
 import type { Habit } from '../types';

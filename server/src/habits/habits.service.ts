@@ -1,7 +1,8 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
+import { CreateActionDto } from './dto/create-action.dto';
 
 @Injectable()
 export class HabitsService {
@@ -15,16 +16,9 @@ export class HabitsService {
     });
   }
 
-  findArchived(userId: string) {
-    return this.prisma.habit.findMany({
-      where: { userId, isArchived: true },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-  async findOne(id: string, userId: string) {
+  async findOne(userId: string, habitId: string) {
     const habit = await this.prisma.habit.findUnique({
-      where: { id },
+      where: { id: habitId },
       include: { actions: { orderBy: { order: 'asc' } } },
     });
     if (!habit) throw new NotFoundException('Habit not found');
@@ -32,37 +26,55 @@ export class HabitsService {
     return habit;
   }
 
-  async create(userId: string, dto: CreateHabitDto) {
-    const count = await this.prisma.habit.count({
-      where: { userId, isArchived: false },
-    });
-    if (count >= 10) {
-      throw new BadRequestException('Habit limit reached (maximum 10 active habits)');
-    }
+  create(userId: string, dto: CreateHabitDto) {
     return this.prisma.habit.create({
       data: { ...dto, userId },
       include: { actions: true },
     });
   }
 
-  async update(id: string, userId: string, dto: UpdateHabitDto) {
-    const habit = await this.prisma.habit.findUnique({ where: { id } });
-    if (!habit) throw new NotFoundException();
+  async update(userId: string, habitId: string, dto: UpdateHabitDto) {
+    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    if (!habit) throw new NotFoundException('Habit not found');
     if (habit.userId !== userId) throw new ForbiddenException();
-    return this.prisma.habit.update({ where: { id }, data: dto });
+
+    return this.prisma.habit.update({
+      where: { id: habitId },
+      data: dto,
+      include: { actions: { orderBy: { order: 'asc' } } },
+    });
   }
 
-  async archive(id: string, userId: string) {
-    const habit = await this.prisma.habit.findUnique({ where: { id } });
-    if (!habit) throw new NotFoundException();
+  async archive(userId: string, habitId: string) {
+    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    if (!habit) throw new NotFoundException('Habit not found');
     if (habit.userId !== userId) throw new ForbiddenException();
-    return this.prisma.habit.update({ where: { id }, data: { isArchived: true } });
+
+    return this.prisma.habit.update({
+      where: { id: habitId },
+      data: { isArchived: true },
+    });
   }
 
-  async restore(id: string, userId: string) {
-    const habit = await this.prisma.habit.findUnique({ where: { id } });
-    if (!habit) throw new NotFoundException();
+  async createAction(userId: string, habitId: string, dto: CreateActionDto) {
+    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    if (!habit) throw new NotFoundException('Habit not found');
     if (habit.userId !== userId) throw new ForbiddenException();
-    return this.prisma.habit.update({ where: { id }, data: { isArchived: false } });
+
+    return this.prisma.action.create({
+      data: { ...dto, habitId },
+    });
+  }
+
+  async removeAction(userId: string, habitId: string, actionId: string): Promise<void> {
+    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    if (!habit) throw new NotFoundException('Habit not found');
+    if (habit.userId !== userId) throw new ForbiddenException();
+
+    const action = await this.prisma.action.findUnique({ where: { id: actionId } });
+    if (!action) throw new NotFoundException('Action not found');
+    if (action.habitId !== habitId) throw new ForbiddenException();
+
+    await this.prisma.action.delete({ where: { id: actionId } });
   }
 }

@@ -1,9 +1,23 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { HabitsService } from './habits.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
+import { CreateActionDto } from './dto/create-action.dto';
 
+@ApiTags('habits')
+@ApiBearerAuth()
 @Controller('habits')
 @UseGuards(JwtAuthGuard)
 export class HabitsController {
@@ -14,14 +28,9 @@ export class HabitsController {
     return this.habits.findAll(req.user.userId);
   }
 
-  @Get('archived')
-  findArchived(@Request() req: any) {
-    return this.habits.findArchived(req.user.userId);
-  }
-
   @Get(':id')
   findOne(@Param('id') id: string, @Request() req: any) {
-    return this.habits.findOne(id, req.user.userId);
+    return this.habits.findOne(req.user.userId, id);
   }
 
   @Post()
@@ -31,16 +40,25 @@ export class HabitsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateHabitDto, @Request() req: any) {
-    return this.habits.update(id, req.user.userId, dto);
+    return this.habits.update(req.user.userId, id, dto);
   }
 
-  @Delete(':id')
+  @Patch(':id/archive')
   archive(@Param('id') id: string, @Request() req: any) {
-    return this.habits.archive(id, req.user.userId);
+    return this.habits.archive(req.user.userId, id);
   }
 
-  @Patch(':id/restore')
-  restore(@Param('id') id: string, @Request() req: any) {
-    return this.habits.restore(id, req.user.userId);
+  @Post(':id/actions')
+  createAction(@Param('id') id: string, @Body() dto: CreateActionDto, @Request() req: any) {
+    return this.habits.createAction(req.user.userId, id, dto);
+  }
+
+  @Delete(':id/actions/:actionId')
+  removeAction(
+    @Param('id') id: string,
+    @Param('actionId') actionId: string,
+    @Request() req: any,
+  ) {
+    return this.habits.removeAction(req.user.userId, id, actionId);
   }
 }

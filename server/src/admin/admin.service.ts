@@ -13,7 +13,7 @@ export class AdminService {
         name: true,
         role: true,
         createdAt: true,
-        _count: { select: { habits: true } },
+        _count: { select: { goals: true } },
         rank: { select: { totalStrikes: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -24,7 +24,7 @@ export class AdminService {
       name: u.name,
       role: u.role,
       createdAt: u.createdAt,
-      habitsCount: u._count.habits,
+      goalsCount: u._count.goals,
       strikesCount: u.rank?.totalStrikes ?? 0,
     }));
   }
@@ -32,9 +32,10 @@ export class AdminService {
   async blockUser(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
+    const newRole = user.role === 'blocked' ? 'user' : 'blocked';
     return this.prisma.user.update({
       where: { id },
-      data: { role: 'blocked' },
+      data: { role: newRole },
       select: { id: true, email: true, role: true },
     });
   }
@@ -50,11 +51,11 @@ export class AdminService {
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr + 'T00:00:00.000Z');
 
-    const [totalUsers, totalHabits, totalStrikes, activeTodayGroups] = await Promise.all([
+    const [totalUsers, totalGoals, totalStrikes, activeTodayGroups] = await Promise.all([
       this.prisma.user.count(),
-      this.prisma.habit.count({ where: { isArchived: false } }),
-      this.prisma.completion.count(),
-      this.prisma.completion.groupBy({
+      this.prisma.goal.count({ where: { status: 'active' } }),
+      this.prisma.goalProgress.count(),
+      this.prisma.goalProgress.groupBy({
         by: ['userId'],
         where: { date: { gte: today } },
       }),
@@ -62,7 +63,7 @@ export class AdminService {
 
     return {
       totalUsers,
-      totalHabits,
+      totalGoals,
       totalCompletions: totalStrikes,
       activeToday: activeTodayGroups.length,
     };

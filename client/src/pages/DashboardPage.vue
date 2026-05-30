@@ -1,139 +1,141 @@
 <template>
-  <v-container>
-    <p class="text-body-2 text-medium-emphasis mb-4">{{ formattedDate }}</p>
+  <div class="max-w-2xl mx-auto px-4 py-6 min-h-[calc(100vh-3.5rem)]">
+    <p class="text-sm mb-4" style="color: rgba(255,255,255,0.5);">{{ formattedDate }}</p>
 
     <GamificationHero />
 
-    <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
+    <div v-if="loading" class="flex justify-center py-8">
+      <UiSpinner />
+    </div>
 
-    <!-- Smart Empty State: нет привычек -->
-    <template v-if="!loading && habitsStore.habits.length === 0">
-      <div class="text-center py-10">
-        <div style="font-size: 64px; margin-bottom: 16px;">⚒️</div>
-        <h2 class="text-h6 font-weight-bold mb-2">Добро пожаловать в FORMANIMA</h2>
-        <p class="text-body-2 text-medium-emphasis mb-6">
-          Создай первую привычку, чтобы начать ковать характер
+    <!-- Empty State: no goals -->
+    <template v-else-if="goalsStore.todayGoals.goals.length === 0">
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">🎯</div>
+        <h2 class="text-xl font-bold mb-2">Добро пожаловать в FORMANIMA</h2>
+        <p class="text-sm mb-6" style="color: rgba(255,255,255,0.5);">
+          Создай первую цель, чтобы начать отслеживать прогресс
         </p>
-        <v-btn color="primary" size="large" prepend-icon="mdi-plus" @click="showForm = true">
-          Создать первую привычку
-        </v-btn>
-        <div class="mt-3">
-          <v-btn variant="text" size="small" to="/">Посмотри как это работает →</v-btn>
+        <router-link to="/goals">
+          <UiButton size="lg">
+            <Plus class="w-5 h-5 mr-1" />
+            Создать первую цель
+          </UiButton>
+        </router-link>
+      </div>
+    </template>
+
+    <!-- Today Goals List -->
+    <template v-else>
+      <div class="mb-3">
+        <p class="text-xs font-medium" style="color: rgba(255,255,255,0.4);">Цели на сегодня</p>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div
+          v-for="goal in goalsStore.todayGoals.goals"
+          :key="goal.id"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors"
+          :style="isDoneToday(goal.id)
+            ? 'background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);'
+            : 'background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);'"
+        >
+          <div
+            class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+            :style="{ background: hexToAlpha(goal.color || '#6366f1', 0.15) }"
+          >
+            {{ goal.icon || '🎯' }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium" :style="isDoneToday(goal.id) ? 'text-decoration: line-through; color: rgba(255,255,255,0.4);' : ''">
+              {{ goal.title }}
+            </p>
+            <template v-if="goal.targetValue && goal.targetValue > 0">
+              <div class="flex items-center gap-2 mt-1">
+                <div class="flex-1 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.08); height: 3px;">
+                  <div
+                    class="h-full rounded-full"
+                    :style="{
+                      width: Math.min(100, (goal.currentValue / goal.targetValue) * 100) + '%',
+                      background: goal.color || '#6366f1',
+                    }"
+                  />
+                </div>
+                <span class="text-xs flex-shrink-0" style="color: rgba(255,255,255,0.4);">
+                  {{ goal.currentValue }}/{{ goal.targetValue }}
+                </span>
+              </div>
+            </template>
+          </div>
+          <button
+            class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+            :style="isDoneToday(goal.id)
+              ? 'background: #6366f1;'
+              : 'background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);'"
+            :disabled="togglingId === goal.id"
+            @click="toggleGoal(goal.id)"
+          >
+            <Check v-if="isDoneToday(goal.id)" class="w-4 h-4 text-white" />
+          </button>
         </div>
       </div>
     </template>
 
-    <!-- Привычки без действий -->
-    <template v-else-if="!loading && habitsWithActions.length === 0">
-      <v-list-item
-        v-for="habit in habitsStore.habits"
-        :key="habit.id"
-        :to="`/habits/${habit.id}`"
-        rounded="xl"
-        class="mb-2"
-        style="border: 1px solid rgba(255,255,255,0.08);"
-      >
-        <template #prepend>
-          <v-icon :icon="habit.icon" :color="habit.color" />
-        </template>
-        <v-list-item-title>{{ habit.title }}</v-list-item-title>
-        <v-list-item-subtitle>Добавь действия, чтобы начать отслеживать →</v-list-item-subtitle>
-      </v-list-item>
-    </template>
-
-    <!-- Список привычек: невыполненные вверху -->
-    <template v-else-if="!loading">
-      <v-list class="pa-0">
-        <DailyHabitRow
-          v-for="habit in sortedHabits"
-          :key="habit.id"
-          :habit="habit"
-          :date="today"
-          :streak="streakMap[habit.id]"
-        />
-      </v-list>
-    </template>
-
     <MotivationCard class="mt-4" />
 
-    <!-- Диалог создания привычки (для Smart Empty State) -->
-    <v-dialog v-model="showForm" max-width="560">
-      <HabitForm @submit="onCreateHabit" @cancel="showForm = false" />
-    </v-dialog>
-
     <XpBurstDialog />
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
-import { useHabitsStore } from '../stores/habits.store';
-import { useTrackingStore } from '../stores/tracking.store';
-import { statsApi } from '../api/stats.api';
+import { Plus, Check } from 'lucide-vue-next';
+import { useGoalsStore } from '../stores/goals.store';
 import { useNotify } from '../composables/useNotify';
-import client from '../api/client';
+import { UiButton, UiSpinner } from '../components/ui';
 import GamificationHero from '../components/gamification/GamificationHero.vue';
-import DailyHabitRow from '../components/tracking/DailyHabitRow.vue';
 import MotivationCard from '../components/common/MotivationCard.vue';
-import HabitForm from '../components/habits/HabitForm.vue';
 import XpBurstDialog from '../components/common/XpBurstDialog.vue';
-import type { Habit } from '../types';
 
 dayjs.locale('ru');
 
-const habitsStore = useHabitsStore();
-const trackingStore = useTrackingStore();
+const goalsStore = useGoalsStore();
 const { notify } = useNotify();
 const loading = ref(true);
-const showForm = ref(false);
 const today = dayjs().format('YYYY-MM-DD');
 const formattedDate = dayjs().format('dddd, D MMMM YYYY');
-const streakMap = ref<Record<string, number>>({});
+const togglingId = ref<string | null>(null);
 
-const habitsWithActions = computed(() =>
-  habitsStore.habits.filter((h) => h.actions && h.actions.length > 0),
-);
+function isDoneToday(goalId: string) {
+  return goalsStore.todayGoals.progresses.some(
+    (p) => p.goalId === goalId && p.date.slice(0, 10) === today,
+  );
+}
 
-const sortedHabits = computed(() =>
-  [...habitsWithActions.value].sort((a, b) => {
-    const aStatus = trackingStore.getStatus(a.id, today);
-    const bStatus = trackingStore.getStatus(b.id, today);
-    const aDone = a.actions.every((ac) => aStatus[ac.id] ?? false) ? 1 : 0;
-    const bDone = b.actions.every((ac) => bStatus[ac.id] ?? false) ? 1 : 0;
-    return aDone - bDone;
-  }),
-);
+function hexToAlpha(hex: string, alpha: number) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return `rgba(99,102,241,${alpha})`;
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
-async function onCreateHabit(
-  data: Partial<Habit>,
-  actions: { id?: string; title: string; order: number }[],
-) {
+async function toggleGoal(goalId: string) {
+  togglingId.value = goalId;
   try {
-    const habit = await habitsStore.create(data);
-    for (const [i, a] of actions.entries()) {
-      await client.post(`/habits/${habit.id}/actions`, { title: a.title, order: i });
-    }
-    await habitsStore.fetchAll();
-    await trackingStore.loadStatus(habit.id, today);
-    showForm.value = false;
+    await goalsStore.toggleTodayProgress(goalId, today);
   } catch {
-    notify('Не удалось создать привычку');
+    notify('Не удалось обновить прогресс');
+  } finally {
+    togglingId.value = null;
   }
 }
 
 onMounted(async () => {
   try {
-    await habitsStore.fetchAll();
-    await Promise.all([
-      ...habitsWithActions.value.map((h) => trackingStore.loadStatus(h.id, today)),
-      ...habitsWithActions.value.map((h) =>
-        statsApi.getStreak(h.id).then((s) => {
-          streakMap.value[h.id] = s.current;
-        }),
-      ),
-    ]);
+    await goalsStore.fetchTodayGoals();
   } catch {
     notify('Не удалось загрузить данные');
   } finally {

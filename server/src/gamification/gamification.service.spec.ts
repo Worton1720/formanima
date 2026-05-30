@@ -3,12 +3,13 @@ import { GamificationService } from './gamification.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const mockPrisma = {
-  completion: {
+  goalProgress: {
     count: jest.fn(),
     findMany: jest.fn(),
   },
-  habit: {
+  goal: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
   },
   userAchievement: {
     findMany: jest.fn(),
@@ -17,6 +18,7 @@ const mockPrisma = {
   userRank: {
     upsert: jest.fn(),
   },
+  $queryRaw: jest.fn(),
 };
 
 describe('GamificationService', () => {
@@ -66,11 +68,15 @@ describe('GamificationService', () => {
   });
 
   it('recalculate unlocks ACH-001 when totalStrikes=1', async () => {
-    mockPrisma.completion.count.mockResolvedValue(1);
-    mockPrisma.habit.findMany.mockResolvedValue([]);
-    mockPrisma.completion.findMany.mockResolvedValue([]);
+    mockPrisma.goalProgress.count.mockResolvedValue(1);
+    mockPrisma.goal.findMany.mockResolvedValue([]);
+    mockPrisma.goal.findFirst.mockResolvedValue(null);
+    mockPrisma.goalProgress.findMany.mockResolvedValue([
+      { goalId: 'g1', milestoneId: null, date: new Date(), completedAt: new Date(), value: 1 },
+    ]);
     mockPrisma.userAchievement.findMany.mockResolvedValue([]);
     mockPrisma.userAchievement.upsert.mockResolvedValue({});
+    mockPrisma.$queryRaw.mockResolvedValue([{ count: BigInt(0) }]);
     mockPrisma.userRank.upsert.mockResolvedValue({
       xp: 20,
       level: 1,

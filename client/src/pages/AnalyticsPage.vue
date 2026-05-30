@@ -1,156 +1,140 @@
 <template>
-  <v-container>
-    <div class="d-flex align-center mb-6">
-      <h1 class="text-h5">Аналитика</h1>
-      <v-spacer />
-      <v-btn-toggle v-model="period" mandatory density="compact" variant="outlined" @update:model-value="load">
-        <v-btn :value="7" size="small">7 дней</v-btn>
-        <v-btn :value="30" size="small">30 дней</v-btn>
-      </v-btn-toggle>
+  <div class="max-w-2xl mx-auto px-4 py-6 min-h-[calc(100vh-3.5rem)] flex flex-col">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Аналитика</h1>
+      <div class="flex rounded-xl overflow-hidden border" style="border-color: rgba(255,255,255,0.12);">
+        <button
+          v-for="p in [7, 30]"
+          :key="p"
+          class="px-3 py-1.5 text-sm transition-colors"
+          :style="period === p
+            ? 'background: #6366f1; color: #fff;'
+            : 'background: transparent; color: rgba(255,255,255,0.5);'"
+          @click="period = p; load()"
+        >{{ p }} дней</button>
+      </div>
     </div>
 
-    <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
+    <div v-if="loading" class="flex justify-center py-8">
+      <UiSpinner />
+    </div>
 
-    <!-- KPI карточки -->
-    <v-row v-if="!loading && overview.length" class="mb-4">
-      <v-col cols="4">
-        <v-card rounded="xl" variant="tonal" color="primary" class="text-center pa-3">
-          <div class="text-h5 font-weight-bold" style="color: #6366f1;">{{ avgCompletion }}%</div>
-          <div class="text-caption text-medium-emphasis">выполнений</div>
-        </v-card>
-      </v-col>
-      <v-col cols="4">
-        <v-card rounded="xl" variant="tonal" color="warning" class="text-center pa-3">
-          <div class="text-h5 font-weight-bold" style="color: #f59e0b;">{{ maxStreak }}</div>
-          <div class="text-caption text-medium-emphasis">streak дней 🔥</div>
-        </v-card>
-      </v-col>
-      <v-col cols="4">
-        <v-card rounded="xl" variant="tonal" color="success" class="text-center pa-3">
-          <div class="text-h5 font-weight-bold" style="color: #22c55e;">{{ perfectDays }}</div>
-          <div class="text-caption text-medium-emphasis">идеал. дней</div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <template v-else>
+      <!-- Empty state -->
+      <div v-if="!overview.length" class="flex-1 flex flex-col items-center justify-center text-center py-8" style="color: rgba(255,255,255,0.3);">
+        <div class="text-5xl mb-4">📊</div>
+        <p class="text-lg font-medium mb-1">Нет данных</p>
+        <p class="text-sm">Начни выполнять привычки, чтобы видеть статистику</p>
+      </div>
 
-    <template v-if="!loading">
-      <v-row class="mb-4">
-        <v-col cols="12">
-          <v-card rounded="xl" variant="tonal" color="primary">
-            <v-card-title class="text-body-1 font-weight-medium pt-4 px-4 pb-0">
-              Выполнения по дням
-            </v-card-title>
-            <v-card-text>
-              <canvas ref="lineChartRef" height="120" />
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+      <template v-else>
+        <!-- KPI карточки -->
+        <div class="grid grid-cols-3 gap-3 mb-6">
+          <div class="rounded-xl p-3 text-center" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);">
+            <p class="text-2xl font-bold" style="color: #6366f1;">{{ avgCompletion }}%</p>
+            <p class="text-xs mt-1" style="color: rgba(255,255,255,0.5);">выполнений</p>
+          </div>
+          <div class="rounded-xl p-3 text-center" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);">
+            <p class="text-2xl font-bold" style="color: #f59e0b;">{{ maxStreak }}</p>
+            <p class="text-xs mt-1" style="color: rgba(255,255,255,0.5);">streak дней 🔥</p>
+          </div>
+          <div class="rounded-xl p-3 text-center" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+            <p class="text-2xl font-bold" style="color: #22c55e;">{{ perfectDays }}</p>
+            <p class="text-xs mt-1" style="color: rgba(255,255,255,0.5);">идеал. дней</p>
+          </div>
+        </div>
 
-      <v-row class="mb-4" v-if="overview.length">
-        <v-col cols="12">
-          <v-card rounded="xl">
-            <v-card-title class="text-body-1 font-weight-medium pt-4 px-4 pb-0">
-              % выполнения по привычкам
-            </v-card-title>
-            <v-card-text>
-              <canvas ref="barChartRef" height="120" />
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+        <!-- Line chart -->
+        <div class="rounded-2xl p-4 mb-4" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+          <p class="text-sm font-medium mb-3">Выполнения по дням</p>
+          <canvas ref="lineChartRef" height="120" />
+        </div>
 
-      <v-row v-if="streakRows.length">
-        <v-col cols="12">
-          <v-card rounded="xl">
-            <v-card-title class="text-body-1 font-weight-medium pt-4 px-4 pb-2">
-              Streak по привычкам
-            </v-card-title>
-            <v-table density="compact">
-              <thead>
-                <tr>
-                  <th>Привычка</th>
-                  <th class="text-center">Текущий</th>
-                  <th class="text-center">Лучший</th>
-                  <th class="text-center">% за период</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="row in streakRows" :key="row.habitId">
-                  <td>
-                    <div class="d-flex align-center gap-2">
-                      <span
-                        class="rounded-circle d-inline-block"
-                        :style="{ width: '10px', height: '10px', background: row.color }"
-                      />
-                      {{ row.title }}
-                    </div>
-                  </td>
-                  <td class="text-center">
-                    <v-chip size="x-small" color="primary" variant="tonal">{{ row.current }} дн.</v-chip>
-                  </td>
-                  <td class="text-center">
-                    <v-chip size="x-small" variant="tonal">{{ row.best }} дн.</v-chip>
-                  </td>
-                  <td class="text-center">{{ row.completionRate }}%</td>
-                </tr>
-              </tbody>
-            </v-table>
-          </v-card>
-        </v-col>
-      </v-row>
+        <!-- Bar chart -->
+        <div v-if="overview.length" class="rounded-2xl p-4 mb-4" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+          <p class="text-sm font-medium mb-3">% выполнения по привычкам</p>
+          <canvas ref="barChartRef" height="120" />
+        </div>
 
-      <!-- Heatmap аккордеоны -->
-      <v-row v-if="habitsWithActions.length" class="mt-2">
-        <v-col cols="12">
-          <v-card rounded="xl">
-            <v-card-title class="text-body-1 font-weight-medium pt-4 px-4 pb-2">
-              История выполнений
-            </v-card-title>
-            <v-expansion-panels v-model="openPanel" variant="accordion">
-              <v-expansion-panel
-                v-for="(habit, idx) in habitsWithActions"
-                :key="habit.id"
-                :value="idx"
+        <!-- Streak table -->
+        <div v-if="streakRows.length" class="rounded-2xl mb-4 overflow-hidden" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+          <p class="text-sm font-medium px-4 pt-4 pb-2">Streak по привычкам</p>
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <th class="px-4 py-2 text-left text-xs font-medium" style="color: rgba(255,255,255,0.4);">Привычка</th>
+                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(255,255,255,0.4);">Текущий</th>
+                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(255,255,255,0.4);">Лучший</th>
+                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(255,255,255,0.4);">% за период</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in streakRows"
+                :key="row.habitId"
+                style="border-bottom: 1px solid rgba(255,255,255,0.05);"
               >
-                <v-expansion-panel-title>
-                  <div class="d-flex align-center gap-2 w-100">
-                    <v-icon :icon="habit.icon" :color="habit.color" size="18" />
-                    <span class="text-body-2">{{ habit.title }}</span>
-                    <v-spacer />
-                    <v-chip
-                      v-if="streakMap[habit.id] >= 2"
-                      size="x-small"
-                      color="orange"
-                      variant="tonal"
-                      prepend-icon="mdi-fire"
-                    >{{ streakMap[habit.id] }}</v-chip>
+                <td class="px-4 py-2">
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-full flex-shrink-0" :style="{ width: '8px', height: '8px', background: row.color }" />
+                    <span>{{ row.title }}</span>
                   </div>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                  <HeatmapCalendar :habit-id="habit.id" :color="habit.color" />
-                </v-expansion-panel-text>
-              </v-expansion-panel>
-            </v-expansion-panels>
-          </v-card>
-        </v-col>
-      </v-row>
+                </td>
+                <td class="px-4 py-2 text-center">
+                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(99,102,241,0.15); color: #6366f1;">
+                    {{ row.current }} дн.
+                  </span>
+                </td>
+                <td class="px-4 py-2 text-center">
+                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6);">
+                    {{ row.best }} дн.
+                  </span>
+                </td>
+                <td class="px-4 py-2 text-center" style="color: rgba(255,255,255,0.7);">{{ row.completionRate }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <v-empty-state
-        v-if="!loading && overview.length === 0"
-        icon="mdi-chart-line"
-        title="Нет данных"
-        text="Начни выполнять привычки, чтобы видеть статистику"
-      />
+        <!-- Heatmap аккордеоны -->
+        <div v-if="habitsWithActions.length" class="rounded-2xl overflow-hidden" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+          <p class="text-sm font-medium px-4 pt-4 pb-2">История выполнений</p>
+          <UiDisclosure
+            v-for="(habit, idx) in habitsWithActions"
+            :key="habit.id"
+            :default-open="idx === 0"
+          >
+            <template #button>
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <component :is="getIcon(habit.icon)" class="w-4 h-4 flex-shrink-0" :style="{ color: habit.color }" />
+                <span class="text-sm truncate">{{ habit.title }}</span>
+                <span
+                  v-if="streakMap[habit.id] >= 2"
+                  class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs flex-shrink-0"
+                  style="background: rgba(249,115,22,0.15); color: #fb923c;"
+                >
+                  <Flame class="w-3 h-3" />{{ streakMap[habit.id] }}
+                </span>
+              </div>
+            </template>
+            <template #panel>
+              <HeatmapCalendar :habit-id="habit.id" :color="habit.color" />
+            </template>
+          </UiDisclosure>
+        </div>
+      </template>
     </template>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { Chart, registerables } from 'chart.js';
+import { Flame } from 'lucide-vue-next';
 import { statsApi } from '../api/stats.api';
 import { useHabitsStore } from '../stores/habits.store';
+import { getIcon } from '../utils/iconMap';
+import { UiSpinner, UiDisclosure } from '../components/ui';
 import HeatmapCalendar from '../components/stats/HeatmapCalendar.vue';
 import type { HabitOverview, DailyStats, StreakStats } from '../types';
 
@@ -159,7 +143,6 @@ Chart.register(...registerables);
 const habitsStore = useHabitsStore();
 const loading = ref(true);
 const period = ref(30);
-const openPanel = ref(0);
 const streakMap = ref<Record<string, number>>({});
 
 const overview = ref<HabitOverview[]>([]);
@@ -285,13 +268,15 @@ async function load() {
     for (const row of streakRows.value) {
       streakMap.value[row.habitId] = row.current;
     }
-
-    await nextTick();
-    buildLineChart();
-    buildBarChart();
-  } finally {
+  } catch {
     loading.value = false;
+    return;
   }
+
+  loading.value = false;
+  await nextTick();
+  buildLineChart();
+  buildBarChart();
 }
 
 onMounted(load);

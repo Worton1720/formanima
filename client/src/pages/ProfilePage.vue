@@ -1,116 +1,128 @@
 <template>
-  <v-container>
-    <h1 class="text-h5 mb-6">Профиль</h1>
+  <div class="max-w-lg mx-auto px-4 py-6 min-h-[calc(100vh-3.5rem)]">
+    <h1 class="text-2xl font-bold mb-6">Профиль</h1>
 
-    <v-card rounded="xl" max-width="500">
-      <v-card-text>
-        <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-4" />
+    <GamificationHero />
 
-        <v-text-field
-          v-if="!editMode"
-          :model-value="profile?.name ?? auth.userName ?? '—'"
-          label="Имя"
-          readonly
-          prepend-inner-icon="mdi-account"
-          class="mb-2"
-        />
-        <v-text-field
-          v-else
-          v-model="nameInput"
-          label="Имя"
-          prepend-inner-icon="mdi-account"
-          class="mb-2"
-          autofocus
-          :rules="[(v: string) => v.length >= 2 || 'Минимум 2 символа']"
-        />
-
-        <v-text-field
-          :model-value="profile?.email ?? auth.userEmail ?? '—'"
-          label="Email"
-          readonly
-          prepend-inner-icon="mdi-email"
-          class="mb-2"
-        />
-
-        <v-text-field
-          v-if="profile?.createdAt"
-          :model-value="formatDate(profile.createdAt)"
-          label="Дата регистрации"
-          readonly
-          prepend-inner-icon="mdi-calendar"
-          class="mb-4"
-        />
-
-        <v-divider class="mb-4" />
-        <div class="text-body-2 font-weight-medium mb-3">Настройки</div>
-
-        <div class="d-flex align-center mb-3">
-          <v-icon icon="mdi-theme-light-dark" class="mr-3 text-medium-emphasis" />
-          <span class="text-body-2 flex-grow-1">Тема оформления</span>
-          <v-switch
-            :model-value="isDark"
-            @update:model-value="toggleTheme"
-            :label="isDark ? 'Тёмная' : 'Светлая'"
-            density="compact"
-            hide-details
-            color="primary"
-          />
+    <div class="rounded-2xl overflow-hidden" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+      <div class="p-6">
+        <div v-if="loading" class="flex justify-center py-4">
+          <UiSpinner />
         </div>
 
-        <div class="d-flex align-center">
-          <v-icon icon="mdi-translate" class="mr-3 text-medium-emphasis" />
-          <span class="text-body-2 flex-grow-1">Язык интерфейса</span>
-          <v-btn-toggle
-            v-model="language"
-            mandatory
-            density="compact"
-            variant="outlined"
-            @update:model-value="saveLanguage"
-          >
-            <v-btn value="ru" size="small">RU</v-btn>
-            <v-btn value="en" size="small">EN</v-btn>
-          </v-btn-toggle>
-        </div>
-      </v-card-text>
+        <template v-else>
+          <!-- Имя -->
+          <div class="mb-4">
+            <template v-if="!editMode">
+              <UiInput
+                :model-value="profile?.name ?? auth.userName ?? '—'"
+                label="Имя"
+                readonly
+                :prepend-icon="User"
+              />
+            </template>
+            <template v-else>
+              <UiInput
+                v-model="nameInput"
+                label="Имя"
+                placeholder="Ваше имя"
+                :prepend-icon="User"
+                :error="nameInput.length > 0 && nameInput.length < 2 ? 'Минимум 2 символа' : ''"
+                autofocus
+              />
+            </template>
+          </div>
 
-      <v-divider />
+          <!-- Email -->
+          <div class="mb-4">
+            <UiInput
+              :model-value="profile?.email ?? auth.userEmail ?? '—'"
+              label="Email"
+              readonly
+              :prepend-icon="Mail"
+            />
+          </div>
 
-      <v-card-actions>
-        <v-btn color="error" variant="text" prepend-icon="mdi-logout" @click="logout">
-          Выйти
-        </v-btn>
-        <v-spacer />
+          <!-- Дата регистрации -->
+          <div v-if="profile?.createdAt" class="mb-6">
+            <UiInput
+              :model-value="formatDate(profile.createdAt)"
+              label="Дата регистрации"
+              readonly
+              :prepend-icon="Calendar"
+            />
+          </div>
+
+          <div class="border-t mb-4" style="border-color: rgba(255,255,255,0.08);" />
+          <p class="text-sm font-medium mb-4">Настройки</p>
+
+          <!-- Язык -->
+          <div class="flex items-center gap-3">
+            <Languages class="w-5 h-5 flex-shrink-0" style="color: rgba(255,255,255,0.4);" />
+            <span class="text-sm flex-1" style="color: rgba(255,255,255,0.7);">Язык интерфейса</span>
+            <div class="flex rounded-xl overflow-hidden border" style="border-color: rgba(255,255,255,0.12);">
+              <button
+                v-for="lang in ['ru', 'en']"
+                :key="lang"
+                class="px-3 py-1 text-xs transition-colors"
+                :style="language === lang
+                  ? 'background: #6366f1; color: #fff;'
+                  : 'background: transparent; color: rgba(255,255,255,0.5);'"
+                @click="setLanguage(lang as 'ru' | 'en')"
+              >{{ lang.toUpperCase() }}</button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div class="border-t px-6 py-3" style="border-color: rgba(255,255,255,0.08);">
+        <router-link
+          to="/achievements"
+          class="flex items-center gap-3 py-2"
+          style="color: rgba(255,255,255,0.7);"
+        >
+          <Trophy class="w-5 h-5 flex-shrink-0" style="color: #f59e0b;" />
+          <span class="text-sm flex-1">Достижения</span>
+          <ChevronRight class="w-4 h-4" style="color: rgba(255,255,255,0.3);" />
+        </router-link>
+      </div>
+
+      <div class="border-t px-6 py-4 flex items-center gap-2" style="border-color: rgba(255,255,255,0.08);">
+        <UiButton variant="ghost" @click="logout">
+          <LogOut class="w-4 h-4 mr-1" style="color: #ef4444;" />
+          <span style="color: #ef4444;">Выйти</span>
+        </UiButton>
+        <div class="flex-1" />
         <template v-if="!editMode">
-          <v-btn variant="tonal" prepend-icon="mdi-pencil" @click="startEdit">
-            Редактировать
-          </v-btn>
+          <UiButton variant="tonal" @click="startEdit">
+            <Pencil class="w-4 h-4 mr-1" />Редактировать
+          </UiButton>
         </template>
         <template v-else>
-          <v-btn variant="text" @click="cancelEdit">Отмена</v-btn>
-          <v-btn color="primary" variant="tonal" :loading="saving" @click="saveProfile">
-            Сохранить
-          </v-btn>
+          <UiButton variant="ghost" @click="cancelEdit">Отмена</UiButton>
+          <UiButton :loading="saving" @click="saveProfile">Сохранить</UiButton>
         </template>
-      </v-card-actions>
-    </v-card>
-  </v-container>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useTheme } from 'vuetify';
+import { User, Mail, Calendar, LogOut, Pencil, Languages, Trophy, ChevronRight } from 'lucide-vue-next';
 import { useAuthStore } from '../stores/auth.store';
 import { useNotify } from '../composables/useNotify';
 import { authApi } from '../api/auth.api';
-import type { User } from '../types';
+import { UiButton, UiInput, UiSpinner } from '../components/ui';
+import GamificationHero from '../components/gamification/GamificationHero.vue';
+import type { User as UserType } from '../types';
 
 const auth = useAuthStore();
 const router = useRouter();
 const { notify } = useNotify();
-const theme = useTheme();
 
-const profile = ref<User | null>(null);
+const profile = ref<UserType | null>(null);
 const loading = ref(true);
 const saving = ref(false);
 const editMode = ref(false);
@@ -118,8 +130,6 @@ const nameInput = ref('');
 const language = ref<'ru' | 'en'>(
   (localStorage.getItem('language') as 'ru' | 'en') ?? 'ru',
 );
-
-const isDark = computed(() => theme.global.current.value.dark);
 
 onMounted(async () => {
   try {
@@ -167,13 +177,8 @@ async function saveProfile() {
   }
 }
 
-function toggleTheme(dark: boolean | null) {
-  const newTheme = dark ? 'dark' : 'light';
-  theme.global.name.value = newTheme;
-  localStorage.setItem('theme', newTheme);
-}
-
-function saveLanguage(lang: 'ru' | 'en') {
+function setLanguage(lang: 'ru' | 'en') {
+  language.value = lang;
   localStorage.setItem('language', lang);
 }
 

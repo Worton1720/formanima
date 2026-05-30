@@ -1,40 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { HabitsService } from '../habits/habits.service';
+import { GoalsService } from '../goals/goals.service';
 
 @Injectable()
 export class StatsService {
   constructor(
     private prisma: PrismaService,
-    private habits: HabitsService,
+    private goals: GoalsService,
   ) {}
 
-  async getStreak(habitId: string, userId: string): Promise<{ current: number; best: number }> {
-    await this.habits.findOne(habitId, userId);
-    const actions = await this.prisma.action.findMany({ where: { habitId } });
-    if (actions.length === 0) return { current: 0, best: 0 };
+  async getStreak(goalId: string, userId: string): Promise<{ current: number; best: number }> {
+    // Проверяем существование и доступность цели
+    await this.goals.findOne(userId, goalId);
 
-    const actionIds = actions.map((a) => a.id);
-    const completions = await this.prisma.completion.findMany({
-      where: { userId, actionId: { in: actionIds } },
-      select: { date: true, actionId: true },
+    const progresses = await this.prisma.goalProgress.findMany({
+      where: { userId, goalId },
+      select: { date: true },
       orderBy: { date: 'desc' },
     });
 
-    // Group completions by date
-    const byDate = new Map<string, Set<string>>();
-    for (const c of completions) {
-      const key = c.date.toISOString().split('T')[0];
-      if (!byDate.has(key)) byDate.set(key, new Set());
-      byDate.get(key)!.add(c.actionId);
-    }
+    if (progresses.length === 0) return { current: 0, best: 0 };
 
-    const isCompleteDay = (dateStr: string) => {
-      const s = byDate.get(dateStr);
-      return s ? actionIds.every((id) => s.has(id)) : false;
-    };
-
+    // Уникальные даты
     const toStr = (d: Date) => d.toISOString().split('T')[0];
+    const dateSet = new Set(progresses.map((p) => toStr(p.date)));
+
     const today = toStr(new Date());
     const dayBefore = (s: string) => {
       const d = new Date(s);
@@ -45,61 +35,65 @@ export class StatsService {
     // Current streak
     let current = 0;
     let day = today;
-    while (isCompleteDay(day)) {
+    while (dateSet.has(day)) {
       current++;
       day = dayBefore(day);
     }
 
     // Best streak
+    const sortedDates = [...dateSet].sort();
     let best = 0;
     let streak = 0;
-    const allDates = [...byDate.keys()].sort();
-    for (const d of allDates) {
-      if (isCompleteDay(d)) {
-        streak++;
-        best = Math.max(best, streak);
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (i === 0) {
+        streak = 1;
       } else {
-        streak = 0;
+        const prev = new Date(sortedDates[i - 1]);
+        const curr = new Date(sortedDates[i]);
+        const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays === 1) {
+          streak++;
+        } else {
+          streak = 1;
+        }
       }
+      best = Math.max(best, streak);
     }
 
     return { current, best };
   }
 
   async getOverview(userId: string, days: number = 7) {
-    const habits = await this.prisma.habit.findMany({
-      where: { userId, isArchived: false },
-      include: { actions: true },
+    const goals = await this.prisma.goal.findMany({
+      where: { userId, status: 'active', type: 'habit' },
+      orderBy: { createdAt: 'asc' },
     });
 
-    const results: { habitId: string; title: string; completionRate: number; completedDays: number; totalDays: number }[] = [];
-    for (const habit of habits) {
-      if (habit.actions.length === 0) continue;
-      const actionIds = habit.actions.map((a) => a.id);
+    const results: {
+      habitId: string;
+      title: string;
+      completionRate: number;
+      completedDays: number;
+      totalDays: number;
+    }[] = [];
 
+    for (const goal of goals) {
       const from = new Date();
       from.setDate(from.getDate() - days + 1);
+      from.setHours(0, 0, 0, 0);
 
-      const completions = await this.prisma.completion.findMany({
-        where: { userId, actionId: { in: actionIds }, date: { gte: from } },
-        select: { date: true, actionId: true },
+      const progresses = await this.prisma.goalProgress.findMany({
+        where: { userId, goalId: goal.id, date: { gte: from } },
+        select: { date: true },
       });
 
-      const byDate = new Map<string, Set<string>>();
-      for (const c of completions) {
-        const key = c.date.toISOString().split('T')[0];
-        if (!byDate.has(key)) byDate.set(key, new Set());
-        byDate.get(key)!.add(c.actionId);
-      }
-
-      let completedDays = 0;
-      for (const [, set] of byDate) {
-        if (actionIds.every((id) => set.has(id))) completedDays++;
-      }
+      // Уникальные дни с прогрессом
+      const completedDaysSet = new Set(progresses.map((p) => p.date.toISOString().split('T')[0]));
+      const completedDays = completedDaysSet.size;
 
       results.push({
-        habitId: habit.id,
-        title: habit.title,
+        habitId: goal.id,
+        title: goal.title,
         completionRate: Math.round((completedDays / days) * 100),
         completedDays,
         totalDays: days,
@@ -110,39 +104,44 @@ export class StatsService {
   }
 
   async getHeatmap(
-    habitId: string,
+    goalId: string,
     userId: string,
     days = 90,
   ): Promise<{ date: string; completed: boolean }[]> {
-    await this.habits.findOne(habitId, userId);
-    const actions = await this.prisma.action.findMany({ where: { habitId } });
+    await this.goals.findOne(userId, goalId);
 
     const dateRange = this.buildDateRange(days);
-
-    if (actions.length === 0) {
-      return dateRange.map((date) => ({ date, completed: false }));
-    }
-
-    const actionIds = actions.map((a) => a.id);
     const from = new Date(dateRange[0] + 'T00:00:00.000Z');
 
-    const completions = await this.prisma.completion.findMany({
-      where: { userId, actionId: { in: actionIds }, date: { gte: from } },
-      select: { date: true, actionId: true },
+    const progresses = await this.prisma.goalProgress.findMany({
+      where: { userId, goalId, date: { gte: from } },
+      select: { date: true },
     });
 
-    const byDate = new Map<string, Set<string>>();
-    for (const c of completions) {
-      const key = c.date.toISOString().split('T')[0];
-      if (!byDate.has(key)) byDate.set(key, new Set());
-      byDate.get(key)!.add(c.actionId);
+    const completedDates = new Set(progresses.map((p) => p.date.toISOString().split('T')[0]));
+
+    return dateRange.map((date) => ({
+      date,
+      completed: completedDates.has(date),
+    }));
+  }
+
+  async getDailyStats(userId: string, days = 30): Promise<{ date: string; completedCount: number }[]> {
+    const dateRange = this.buildDateRange(days);
+    const from = new Date(dateRange[0] + 'T00:00:00.000Z');
+
+    const progresses = await this.prisma.goalProgress.findMany({
+      where: { userId, date: { gte: from } },
+      select: { date: true },
+    });
+
+    const countByDate = new Map<string, number>();
+    for (const p of progresses) {
+      const key = p.date.toISOString().split('T')[0];
+      countByDate.set(key, (countByDate.get(key) ?? 0) + 1);
     }
 
-    return dateRange.map((date) => {
-      const set = byDate.get(date);
-      const completed = set ? actionIds.every((id) => set.has(id)) : false;
-      return { date, completed };
-    });
+    return dateRange.map((date) => ({ date, completedCount: countByDate.get(date) ?? 0 }));
   }
 
   private buildDateRange(days: number): string[] {

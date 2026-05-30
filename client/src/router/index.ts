@@ -45,10 +45,34 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/finance',
+      component: () => import('../pages/FinancePage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/goals',
+      name: 'Goals',
+      component: () => import('../pages/GoalsPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/goals/:id',
+      name: 'GoalDetail',
+      component: () => import('../pages/GoalDetailPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/calories',
+      name: 'Calories',
+      component: () => import('../pages/CaloriesPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/admin',
       component: () => import('../pages/AdminPage.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
     },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });
 
@@ -60,7 +84,7 @@ router.beforeEach((to) => {
   if (to.meta.requiresAdmin && auth.userRole !== 'admin') {
     return '/dashboard';
   }
-  if ((to.path === '/login' || to.path === '/register') && auth.isAuthenticated) {
+  if ((to.path === '/login' || to.path === '/register' || to.path === '/') && auth.isAuthenticated) {
     return '/dashboard';
   }
 });

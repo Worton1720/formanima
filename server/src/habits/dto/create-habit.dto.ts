@@ -1,7 +1,4 @@
-import { IsString, IsOptional, MaxLength, IsIn } from 'class-validator';
-
-const CATEGORIES = ['sport', 'health', 'learning', 'work', 'finance', 'other'] as const;
-const FREQUENCIES = ['daily', 'weekdays', 'custom'] as const;
+import { IsString, IsOptional, MaxLength } from 'class-validator';
 
 export class CreateHabitDto {
   @IsString()
@@ -13,19 +10,15 @@ export class CreateHabitDto {
   @MaxLength(500)
   description?: string;
 
-  @IsOptional()
-  @IsIn(CATEGORIES)
-  category?: string;
-
-  @IsOptional()
-  @IsIn(FREQUENCIES)
-  frequency?: string;
-
-  @IsOptional()
   @IsString()
-  color?: string;
+  category: string;
 
-  @IsOptional()
   @IsString()
-  icon?: string;
+  frequency: string;
+
+  @IsString()
+  color: string;
+
+  @IsString()
+  icon: string;
 }

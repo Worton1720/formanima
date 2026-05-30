@@ -1,16 +1,15 @@
 <template>
-  <v-card rounded="xl" variant="tonal" color="surface-variant" class="mb-4">
-    <v-card-text class="d-flex align-center ga-3">
-      <v-icon icon="mdi-anvil" color="primary" size="28" />
-      <p class="text-body-2 font-weight-medium font-italic flex-grow-1 ma-0">
-        "{{ quote }}"
-      </p>
-    </v-card-text>
-  </v-card>
+  <div class="rounded-xl p-4 flex items-start gap-3 mb-4" style="background: #242424; border: 1px solid rgba(255,255,255,0.08);">
+    <Hammer class="w-7 h-7 flex-shrink-0" style="color: #6366f1;" />
+    <p class="text-sm font-medium italic flex-1 m-0" style="color: rgba(255,255,255,0.7);">
+      "{{ quote }}"
+    </p>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Hammer } from 'lucide-vue-next';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 

@@ -22,83 +22,78 @@ export class GamificationService {
   }
 
   async recalculate(userId: string): Promise<void> {
-    // 1. Total strikes
-    const totalStrikes = await this.prisma.completion.count({ where: { userId } });
+    // 1. Total strikes = кол-во записей GoalProgress пользователя
+    const totalStrikes = await this.prisma.goalProgress.count({ where: { userId } });
 
-    // 2. Load active habits
-    const habits = await this.prisma.habit.findMany({
-      where: { userId, isArchived: false },
-      include: { actions: true },
+    // 2. Загрузить активные цели (только habit-тип нужен для perfectDay/perfectWeek)
+    const habitGoals = await this.prisma.goal.findMany({
+      where: { userId, status: 'active', type: 'habit' },
     });
 
-    // 3. Load all completions
-    const allCompletions = await this.prisma.completion.findMany({
+    // 3. Загрузить все GoalProgress пользователя
+    const allProgresses = await this.prisma.goalProgress.findMany({
       where: { userId },
-      select: { actionId: true, date: true, completedAt: true },
+      select: { goalId: true, milestoneId: true, date: true, completedAt: true, value: true },
     });
 
-    // 4. Compute best streak across all habits
-    let bestStreak = 0;
     const toDateStr = (d: Date) => d.toISOString().split('T')[0];
 
-    for (const habit of habits) {
-      if (habit.actions.length === 0) continue;
-      const actionIds = new Set(habit.actions.map((a) => a.id));
-      const byDate = new Map<string, Set<string>>();
-      for (const c of allCompletions) {
-        if (!actionIds.has(c.actionId)) continue;
-        const key = toDateStr(c.date);
-        if (!byDate.has(key)) byDate.set(key, new Set());
-        byDate.get(key)!.add(c.actionId);
-      }
-      const isCompleteDay = (d: string) => {
-        const s = byDate.get(d);
-        return s ? [...actionIds].every((id) => s.has(id)) : false;
-      };
-      let streak = 0;
-      for (const d of [...byDate.keys()].sort()) {
-        if (isCompleteDay(d)) {
-          streak++;
-          bestStreak = Math.max(bestStreak, streak);
-        } else {
-          streak = 0;
-        }
+    // 4. Streak — день считается выполненным если есть хотя бы одна GoalProgress запись
+    const progressDates = new Set(allProgresses.map((p) => toDateStr(p.date)));
+    const sortedDates = [...progressDates].sort();
+    let bestStreak = 0;
+    let streak = 0;
+    for (const d of sortedDates) {
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      // Проверяем непрерывность: если следующая дата не следует за текущей — сброс
+      const idx = sortedDates.indexOf(d);
+      if (idx < sortedDates.length - 1) {
+        const current = new Date(d);
+        const next = new Date(sortedDates[idx + 1]);
+        const diffDays = (next.getTime() - current.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays !== 1) streak = 0;
       }
     }
 
-    // 5. Perfect days (all active habits with actions completed)
-    const habitsWithActions = habits.filter((h) => h.actions.length > 0);
+    // 5. Perfect days — день совершенен если есть прогресс по каждой активной habit-цели
     let perfectDayCount = 0;
     let consecutivePerfectDays = 0;
-    if (habitsWithActions.length > 0) {
-      const allDates = new Set(allCompletions.map((c) => toDateStr(c.date)));
-      const completionByDateAction = new Map<string, Set<string>>();
-      for (const c of allCompletions) {
-        const key = toDateStr(c.date);
-        if (!completionByDateAction.has(key)) completionByDateAction.set(key, new Set());
-        completionByDateAction.get(key)!.add(c.actionId);
+    if (habitGoals.length > 0) {
+      const habitGoalIds = new Set(habitGoals.map((g) => g.id));
+      // Группируем GoalProgress по дате: Set goalId
+      const progressByDate = new Map<string, Set<string>>();
+      for (const p of allProgresses) {
+        if (!habitGoalIds.has(p.goalId)) continue;
+        const key = toDateStr(p.date);
+        if (!progressByDate.has(key)) progressByDate.set(key, new Set());
+        progressByDate.get(key)!.add(p.goalId);
       }
       const isPerfectDay = (dateStr: string) => {
-        const done = completionByDateAction.get(dateStr);
+        const done = progressByDate.get(dateStr);
         if (!done) return false;
-        return habitsWithActions.every((h) => h.actions.every((a) => done.has(a.id)));
+        return [...habitGoalIds].every((id) => done.has(id));
       };
-      const sortedDates = [...allDates].sort();
-      let streak = 0;
-      for (const d of sortedDates) {
+      const allHabitDates = new Set<string>();
+      for (const p of allProgresses) {
+        if (habitGoalIds.has(p.goalId)) allHabitDates.add(toDateStr(p.date));
+      }
+      const sortedHabitDates = [...allHabitDates].sort();
+      let pStreak = 0;
+      for (const d of sortedHabitDates) {
         if (isPerfectDay(d)) {
-          streak++;
+          pStreak++;
           perfectDayCount++;
         } else {
-          streak = 0;
+          pStreak = 0;
         }
       }
-      consecutivePerfectDays = streak;
+      consecutivePerfectDays = pStreak;
     }
 
     // 6. Time-based checks
-    const hasEarlyBird = allCompletions.some((c) => c.completedAt.getHours() < 6);
-    const hasNightOwl = allCompletions.some((c) => c.completedAt.getHours() >= 23);
+    const hasEarlyBird = allProgresses.some((p) => p.completedAt.getHours() < 6);
+    const hasNightOwl = allProgresses.some((p) => p.completedAt.getHours() >= 23);
 
     // 7. Already unlocked achievements
     const existingUnlocks = await this.prisma.userAchievement.findMany({
@@ -117,6 +112,38 @@ export class GamificationService {
       else if (ach.type === 'timeBased') {
         if (ach.timeHourMax !== undefined) qualifies = hasEarlyBird;
         else if (ach.timeHourMin !== undefined) qualifies = hasNightOwl;
+      } else if (ach.type === 'calorieStreak') {
+        const nutritionGoal = await this.prisma.goal.findFirst({
+          where: { userId, type: 'nutrition', status: 'active' },
+        });
+        if (nutritionGoal && nutritionGoal.targetValue !== null) {
+          const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d.toISOString().split('T')[0];
+          });
+          const progresses = await this.prisma.goalProgress.findMany({
+            where: {
+              goalId: nutritionGoal.id,
+              userId,
+              date: { in: last7Days.map((d) => new Date(d)) },
+              milestoneId: null,
+            },
+          });
+          const progressByDate = new Map(
+            progresses.map((p) => [toDateStr(p.date), p.value]),
+          );
+          qualifies = last7Days.every((d) => {
+            const val = progressByDate.get(d);
+            return val !== undefined && val <= nutritionGoal.targetValue!;
+          });
+        }
+      } else if (ach.type === 'savingsGoalCompleted') {
+        const result = await this.prisma.$queryRaw<[{ count: bigint }]>`
+          SELECT COUNT(*) as count FROM "SavingsGoal"
+          WHERE "userId" = ${userId} AND "currentAmount" >= "targetAmount"
+        `;
+        qualifies = Number(result[0].count) >= (ach.threshold ?? 1);
       }
       if (qualifies) {
         await this.prisma.userAchievement.upsert({

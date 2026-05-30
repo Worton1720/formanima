@@ -3,6 +3,12 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
+
+jest.mock('bcrypt', () => ({
+  hash: jest.fn().mockResolvedValue('$2b$hashed'),
+  compare: jest.fn(),
+}));
+
 import * as bcrypt from 'bcrypt';
 
 const mockPrisma = {
@@ -30,6 +36,7 @@ describe('AuthService', () => {
     }).compile();
     service = module.get(AuthService);
     jest.clearAllMocks();
+    (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$hashed');
   });
 
   describe('register', () => {
@@ -63,8 +70,9 @@ describe('AuthService', () => {
     it('throws UnauthorizedException if password wrong', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: '1',
-        passwordHash: await bcrypt.hash('correctpass', 10),
+        passwordHash: '$2b$hashed',
       });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       await expect(
         service.login({ email: 'a@b.com', password: 'wrongpass' }),
       ).rejects.toThrow(UnauthorizedException);

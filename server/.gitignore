@@ -1,5 +1,27 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencies
+node_modules/
 
-/generated/prisma
+# Build
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Prisma generated client
+generated/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Playwright CLI artifacts
+.playwright-cli/
+
+# TypeScript incremental build
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db

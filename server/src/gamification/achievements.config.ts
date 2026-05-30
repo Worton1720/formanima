@@ -1,4 +1,4 @@
-export type AchievementType = 'totalStrikes' | 'streak' | 'perfectWeek' | 'timeBased';
+export type AchievementType = 'totalStrikes' | 'streak' | 'perfectWeek' | 'timeBased' | 'calorieStreak' | 'savingsGoalCompleted';
 
 export interface AchievementDef {
   id: string;
@@ -14,7 +14,7 @@ export interface AchievementDef {
 export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'ACH-001',
-    name: 'First Spark',
+    name: 'Первая искра',
     description: 'Выполни первое действие',
     xpReward: 10,
     type: 'totalStrikes',
@@ -22,7 +22,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-002',
-    name: 'Week Warrior',
+    name: 'Воин недели',
     description: 'Выполняй привычку 7 дней подряд',
     xpReward: 50,
     type: 'streak',
@@ -30,7 +30,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-003',
-    name: 'Month Master',
+    name: 'Мастер месяца',
     description: 'Выполняй привычку 30 дней подряд',
     xpReward: 100,
     type: 'streak',
@@ -38,7 +38,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-004',
-    name: 'Century Forger',
+    name: 'Кователь столетия',
     description: 'Выполняй привычку 100 дней подряд',
     xpReward: 200,
     type: 'streak',
@@ -46,7 +46,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-005',
-    name: 'Iron Will',
+    name: 'Железная воля',
     description: 'Набери 500 выполнений',
     xpReward: 150,
     type: 'totalStrikes',
@@ -54,7 +54,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-006',
-    name: 'Legend',
+    name: 'Легенда',
     description: 'Набери 1000 выполнений',
     xpReward: 300,
     type: 'totalStrikes',
@@ -62,7 +62,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-007',
-    name: 'Perfect Week',
+    name: 'Идеальная неделя',
     description: 'Выполни все привычки 7 дней подряд',
     xpReward: 75,
     type: 'perfectWeek',
@@ -70,7 +70,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-008',
-    name: 'Early Bird',
+    name: 'Ранняя птица',
     description: 'Выполни действие до 6:00 утра',
     xpReward: 5,
     type: 'timeBased',
@@ -78,7 +78,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-009',
-    name: 'Night Owl',
+    name: 'Ночная сова',
     description: 'Выполни действие после 23:00',
     xpReward: 5,
     type: 'timeBased',
@@ -86,10 +86,26 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: 'ACH-010',
-    name: 'Ironclad',
+    name: 'Несокрушимый',
     description: 'Набери 1500 выполнений',
     xpReward: 500,
     type: 'totalStrikes',
     threshold: 1500,
+  },
+  {
+    id: 'ACH-011',
+    name: 'Неделя в балансе',
+    description: '7 дней подряд питался в пределах нормы калорий',
+    xpReward: 50,
+    type: 'calorieStreak',
+    threshold: 7,
+  },
+  {
+    id: 'ACH-012',
+    name: 'Финансовый мастер',
+    description: 'Достиг первой накопительной цели',
+    xpReward: 100,
+    type: 'savingsGoalCompleted',
+    threshold: 1,
   },
 ];

@@ -1,115 +1,127 @@
 <template>
-  <v-card rounded="xl" elevation="4">
-    <v-card-title>{{ habit ? 'Редактировать привычку' : 'Новая привычка' }}</v-card-title>
-    <v-card-text>
-      <v-form @submit.prevent="submit">
-        <v-text-field v-model="form.title" label="Название" :rules="[v => !!v || 'Обязательно']" class="mb-2" />
-        <v-textarea v-model="form.description" label="Описание (необязательно)" rows="2" class="mb-2" />
+  <div class="rounded-2xl p-6 shadow-2xl" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+    <h2 class="text-lg font-semibold mb-5">{{ habit ? 'Редактировать привычку' : 'Новая привычка' }}</h2>
 
-        <v-row dense class="mb-2">
-          <v-col cols="12" sm="6">
-            <v-select v-model="form.category" :items="categories" label="Категория" />
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-select v-model="form.frequency" :items="frequencies" label="Частота" />
-          </v-col>
-        </v-row>
+    <form class="flex flex-col gap-4" @submit.prevent="submit">
+      <UiInput
+        v-model="form.title"
+        label="Название"
+        placeholder="Бег по утрам"
+        :error="titleError"
+      />
+      <UiTextarea
+        v-model="form.description"
+        label="Описание (необязательно)"
+        :rows="2"
+        placeholder="Описание привычки..."
+      />
 
-        <v-row dense class="mb-4">
-          <v-col cols="6">
-            <v-text-field v-model="form.color" label="Цвет" type="color" />
-          </v-col>
-          <v-col cols="6">
-            <v-select v-model="form.icon" :items="icons" label="Иконка">
-              <template #item="{ item, props: p }">
-                <v-list-item v-bind="p">
-                  <template #prepend><v-icon :icon="item.value" class="mr-2" /></template>
-                </v-list-item>
-              </template>
-              <template #selection="{ item }">
-                <v-icon :icon="item.value" class="mr-2" />{{ item.title }}
-              </template>
-            </v-select>
-          </v-col>
-        </v-row>
+      <div class="grid grid-cols-2 gap-3">
+        <UiSelect v-model="form.category" label="Категория" :options="categories" />
+        <UiSelect v-model="form.frequency" label="Частота" :options="frequencies" />
+      </div>
 
-        <!-- Секция действий -->
-        <v-divider class="mb-3">
-          <span class="text-caption text-medium-emphasis px-2">Действия</span>
-        </v-divider>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm block mb-1" style="color: rgba(255,255,255,0.5);">Цвет</label>
+          <input
+            v-model="form.color"
+            type="color"
+            class="w-full h-10 rounded-xl cursor-pointer"
+            style="background: #242424; border: 1px solid rgba(255,255,255,0.08);"
+          />
+        </div>
+        <div>
+          <label class="text-sm block mb-1.5" style="color: rgba(255,255,255,0.5);">Иконка</label>
+          <div class="grid grid-cols-5 gap-1.5">
+            <button
+              v-for="opt in iconOptions"
+              :key="opt.value"
+              type="button"
+              class="flex items-center justify-center p-2.5 rounded-xl transition-colors"
+              :style="form.icon === opt.value
+                ? 'background: rgba(99,102,241,0.2); border: 1px solid #6366f1;'
+                : 'background: #242424; border: 1px solid rgba(255,255,255,0.08);'"
+              :title="opt.label"
+              @click="form.icon = opt.value"
+            >
+              <component
+                :is="getIcon(opt.value)"
+                class="w-5 h-5"
+                :style="form.icon === opt.value ? 'color: #6366f1;' : 'color: rgba(255,255,255,0.5);'"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
 
-        <draggable v-model="localActions" item-key="title" handle=".drag-handle" ghost-class="opacity-50">
+      <!-- Actions section -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="h-px flex-1" style="background: rgba(255,255,255,0.08);" />
+          <span class="text-xs px-2" style="color: rgba(255,255,255,0.4);">Действия</span>
+          <div class="h-px flex-1" style="background: rgba(255,255,255,0.08);" />
+        </div>
+
+        <draggable v-model="localActions" item-key="title" handle=".drag-handle" ghost-class="opacity-40">
           <template #item="{ index }">
-            <div class="d-flex align-center gap-2 mb-2">
-              <v-icon
-                class="drag-handle"
-                icon="mdi-drag"
-                size="20"
-                style="cursor: grab; color: rgba(255,255,255,0.3); flex-shrink: 0;"
+            <div class="flex items-center gap-2 mb-2">
+              <GripVertical
+                class="drag-handle w-4 h-4 flex-shrink-0 cursor-grab"
+                style="color: rgba(255,255,255,0.3);"
               />
-              <v-text-field
+              <input
                 v-model="localActions[index].title"
-                density="compact"
-                hide-details
-                variant="outlined"
-                class="flex-grow-1"
+                class="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
+                style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
               />
-              <v-btn
-                icon="mdi-close"
-                variant="text"
-                size="small"
-                density="compact"
-                color="error"
-                @click="removeAction(index)"
-              />
+              <UiButton variant="ghost" size="sm" type="button" @click="removeAction(index)">
+                <X class="w-4 h-4" style="color: #ef4444;" />
+              </UiButton>
             </div>
           </template>
         </draggable>
 
-        <!-- Поле добавления -->
-        <div class="d-flex align-center gap-2 mb-2">
-          <v-text-field
+        <div class="flex gap-2">
+          <input
             v-model="newActionTitle"
-            density="compact"
-            hide-details
-            variant="outlined"
             placeholder="Добавить действие..."
-            class="flex-grow-1"
+            class="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
             :disabled="localActions.length >= 10"
             @keydown.enter.prevent="addAction"
           />
-          <v-btn
-            icon="mdi-plus"
+          <UiButton
             variant="tonal"
-            size="small"
+            size="sm"
+            type="button"
             :disabled="!newActionTitle.trim() || localActions.length >= 10"
             @click="addAction"
-          />
-        </div>
-
-        <div v-if="showActionsError" class="text-caption text-error mb-2">
-          Добавь хотя бы одно действие
-        </div>
-
-        <div class="d-flex gap-2 justify-end mt-4">
-          <v-btn variant="text" @click="$emit('cancel')">Отмена</v-btn>
-          <v-btn
-            type="submit"
-            color="primary"
-            :loading="loading"
-            :disabled="localActions.length === 0"
           >
-            Сохранить
-          </v-btn>
+            <Plus class="w-4 h-4" />
+          </UiButton>
         </div>
-      </v-form>
-    </v-card-text>
-  </v-card>
+        <p v-if="showActionsError" class="text-xs mt-1" style="color: #ef4444;">
+          Добавь хотя бы одно действие
+        </p>
+      </div>
+
+      <div class="flex gap-2 justify-end pt-2">
+        <UiButton variant="ghost" type="button" @click="$emit('cancel')">Отмена</UiButton>
+        <UiButton type="submit" :loading="loading" :disabled="localActions.length === 0">
+          Сохранить
+        </UiButton>
+      </div>
+    </form>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import draggable from 'vuedraggable';
+import { GripVertical, X, Plus } from 'lucide-vue-next';
+import { UiButton, UiInput, UiTextarea, UiSelect } from '../ui';
+import { getIcon } from '../../utils/iconMap';
 import type { Habit } from '../../types';
 
 const props = defineProps<{ habit?: Habit }>();
@@ -119,37 +131,28 @@ const emit = defineEmits<{
 }>();
 
 const categories = [
-  { title: 'Спорт', value: 'sport' },
-  { title: 'Здоровье', value: 'health' },
-  { title: 'Обучение', value: 'learning' },
-  { title: 'Работа', value: 'work' },
-  { title: 'Финансы', value: 'finance' },
-  { title: 'Другое', value: 'other' },
+  { value: 'sport', label: 'Спорт' }, { value: 'health', label: 'Здоровье' },
+  { value: 'learning', label: 'Обучение' }, { value: 'work', label: 'Работа' },
+  { value: 'finance', label: 'Финансы' }, { value: 'other', label: 'Другое' },
 ];
 const frequencies = [
-  { title: 'Ежедневно', value: 'daily' },
-  { title: 'По будням', value: 'weekdays' },
-  { title: 'Кастомная', value: 'custom' },
+  { value: 'daily', label: 'Ежедневно' },
+  { value: 'weekdays', label: 'По будням' },
+  { value: 'custom', label: 'Кастомная' },
 ];
-const icons = [
-  { title: 'Огонь', value: 'mdi-fire' },
-  { title: 'Сердце', value: 'mdi-heart' },
-  { title: 'Звезда', value: 'mdi-star' },
-  { title: 'Гантеля', value: 'mdi-dumbbell' },
-  { title: 'Книга', value: 'mdi-book-open-variant' },
-  { title: 'Бег', value: 'mdi-run' },
-  { title: 'Еда', value: 'mdi-food-apple' },
-  { title: 'Вода', value: 'mdi-cup-water' },
-  { title: 'Медитация', value: 'mdi-meditation' },
-  { title: 'Велосипед', value: 'mdi-bike' },
-  { title: 'Музыка', value: 'mdi-music' },
-  { title: 'Код', value: 'mdi-code-braces' },
-  { title: 'Деньги', value: 'mdi-cash' },
-  { title: 'Сон', value: 'mdi-sleep' },
-  { title: 'Кисть', value: 'mdi-brush' },
+const iconOptions = [
+  { value: 'mdi-fire', label: 'Огонь' }, { value: 'mdi-heart', label: 'Сердце' },
+  { value: 'mdi-star', label: 'Звезда' }, { value: 'mdi-dumbbell', label: 'Гантеля' },
+  { value: 'mdi-book-open-variant', label: 'Книга' }, { value: 'mdi-run', label: 'Бег' },
+  { value: 'mdi-food-apple', label: 'Еда' }, { value: 'mdi-cup-water', label: 'Вода' },
+  { value: 'mdi-meditation', label: 'Медитация' }, { value: 'mdi-bike', label: 'Велосипед' },
+  { value: 'mdi-music', label: 'Музыка' }, { value: 'mdi-code-braces', label: 'Код' },
+  { value: 'mdi-cash', label: 'Деньги' }, { value: 'mdi-sleep', label: 'Сон' },
+  { value: 'mdi-brush', label: 'Кисть' },
 ];
 
 const loading = ref(false);
+const titleError = ref('');
 const newActionTitle = ref('');
 const showActionsError = ref(false);
 const removedActionIds = ref<string[]>([]);
@@ -198,10 +201,9 @@ function removeAction(index: number) {
 }
 
 async function submit() {
-  if (localActions.value.length === 0) {
-    showActionsError.value = true;
-    return;
-  }
+  titleError.value = '';
+  if (!form.value.title.trim()) { titleError.value = 'Введите название'; return; }
+  if (localActions.value.length === 0) { showActionsError.value = true; return; }
   loading.value = true;
   try {
     const orderedActions = localActions.value.map((a, i) => ({ ...a, order: i }));
