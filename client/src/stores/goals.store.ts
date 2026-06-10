@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { goalsApi } from '../api/goals.api';
 import type { Goal, GoalProgress, CreateGoalDto, UpdateGoalDto, AddProgressDto, RemoveProgressDto } from '../types';
@@ -10,6 +10,15 @@ export const useGoalsStore = defineStore('goals', () => {
   const todayGoals = ref<{ goals: Goal[]; progresses: GoalProgress[] }>({ goals: [], progresses: [] });
   const loading = ref(false);
   const error = ref<string | null>(null);
+
+  // Раздел «Привычки» — это цели типа 'habit'.
+  const habitGoals = computed(() => goals.value.filter((g) => g.type === 'habit'));
+
+  function isMarkedToday(goalId: string, date: string): boolean {
+    return todayGoals.value.progresses.some(
+      (p) => p.goalId === goalId && p.date.slice(0, 10) === date,
+    );
+  }
 
   async function fetchGoals(): Promise<void> {
     loading.value = true;
@@ -140,6 +149,8 @@ export const useGoalsStore = defineStore('goals', () => {
     todayGoals,
     loading,
     error,
+    habitGoals,
+    isMarkedToday,
     fetchGoals,
     fetchArchivedGoals,
     fetchTodayGoals,

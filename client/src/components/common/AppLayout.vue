@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen flex flex-col" style="background: #0f0f0f; color: rgba(255,255,255,0.87);">
+  <div class="min-h-screen flex flex-col" style="background: #15110b; color: rgba(243,234,214,0.92);">
     <!-- Top Bar -->
     <header
       v-if="auth.isAuthenticated"
       class="sticky top-0 z-30 flex-shrink-0"
-      style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(15,15,15,0.85); backdrop-filter: blur(12px);"
+      style="border-bottom: 1px solid rgba(243,234,214,0.10); background: rgba(21,17,11,0.85); backdrop-filter: blur(12px);"
     >
       <div class="max-w-5xl mx-auto px-4 h-14 flex items-center gap-4">
         <router-link
           to="/dashboard"
-          class="font-bold text-lg tracking-tight"
-          style="color: #6366f1;"
+          class="font-display text-xl tracking-tight transition-colors hover:text-gold"
+          style="color: #f3ead6;"
         >
           FORMANIMA
         </router-link>
@@ -22,7 +22,7 @@
             :key="link.to"
             :to="link.to"
             class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-            :style="isActive(link.to) ? 'color: rgba(255,255,255,0.87); background: rgba(255,255,255,0.1);' : 'color: rgba(255,255,255,0.5);'"
+            :style="isActive(link.to) ? 'color: #f3ead6; background: rgba(224,170,78,0.14); box-shadow: inset 0 0 0 1px rgba(224,170,78,0.22);' : 'color: rgba(168,153,124,0.82);'"
           >
             {{ link.label }}
           </router-link>
@@ -30,7 +30,7 @@
             v-if="auth.userRole === 'admin'"
             to="/admin"
             class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-            :style="route.path === '/admin' ? 'color: rgba(255,255,255,0.87); background: rgba(255,255,255,0.1);' : 'color: rgba(255,255,255,0.5);'"
+            :style="route.path === '/admin' ? 'color: #f3ead6; background: rgba(224,170,78,0.14); box-shadow: inset 0 0 0 1px rgba(224,170,78,0.22);' : 'color: rgba(168,153,124,0.82);'"
           >
             Админ
           </router-link>
@@ -40,14 +40,14 @@
           <router-link
             to="/profile"
             class="p-2 rounded-lg transition-colors"
-            style="color: rgba(255,255,255,0.5);"
+            style="color: rgba(168,153,124,0.82);"
           >
             <User class="w-5 h-5" />
           </router-link>
           <button
             v-if="isMobile"
             class="p-2 rounded-lg transition-colors"
-            style="color: rgba(255,255,255,0.5);"
+            style="color: rgba(168,153,124,0.82);"
             @click="logout"
           >
             <LogOut class="w-5 h-5" />
@@ -65,14 +65,14 @@
     <nav
       v-if="auth.isAuthenticated && isMobile"
       class="fixed bottom-0 left-0 right-0 z-30 flex"
-      style="background: #1a1a1a; border-top: 1px solid rgba(255,255,255,0.08);"
+      style="background: #211a12; border-top: 1px solid rgba(243,234,214,0.10);"
     >
       <router-link
         v-for="link in mobileNavLinks"
         :key="link.to"
         :to="link.to"
         class="flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors"
-        :style="isActive(link.to) ? 'color: #6366f1;' : 'color: rgba(255,255,255,0.5);'"
+        :style="isActive(link.to) ? 'color: #e0aa4e;' : 'color: rgba(168,153,124,0.82);'"
       >
         <component :is="link.icon" class="w-5 h-5" />
         <span class="text-[10px]">{{ link.label }}</span>
@@ -101,7 +101,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { useNotify } from '../../composables/useNotify';
 import { useBreakpoint } from '../../composables/useBreakpoint';
 import { useRoute, useRouter } from 'vue-router';
-import { LayoutDashboard, ListChecks, BarChart3, Wallet, User, LogOut, X, Apple } from 'lucide-vue-next';
+import { LayoutDashboard, ListChecks, BarChart3, Wallet, User, LogOut, X, Apple, Target } from 'lucide-vue-next';
 
 const auth = useAuthStore();
 const notify = useNotify();
@@ -112,17 +112,20 @@ const router = useRouter();
 const navLinks = [
   { to: '/dashboard', label: 'Дашборд' },
   { to: '/habits', label: 'Привычки' },
+  { to: '/goals', label: 'Цели' },
   { to: '/analytics', label: 'Аналитика' },
   { to: '/finance', label: 'Финансы' },
   { to: '/calories', label: 'Калории' },
+  { to: '/achievements', label: 'Достижения' },
 ];
 
 const mobileNavLinks = [
   { to: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
   { to: '/habits', label: 'Привычки', icon: ListChecks },
+  { to: '/goals', label: 'Цели', icon: Target },
+  { to: '/analytics', label: 'Аналитика', icon: BarChart3 },
   { to: '/finance', label: 'Финансы', icon: Wallet },
   { to: '/calories', label: 'Калории', icon: Apple },
-  { to: '/profile', label: 'Профиль', icon: User },
 ];
 
 const snackbarColor: Record<string, string> = {
@@ -133,7 +136,7 @@ const snackbarColor: Record<string, string> = {
 };
 
 function isActive(to: string): boolean {
-  if (to === '/habits') return route.path.startsWith('/habits');
+  if (to === '/habits' || to === '/goals') return route.path.startsWith(to);
   return route.path === to;
 }
 

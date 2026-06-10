@@ -6,7 +6,7 @@
       <h1 class="text-2xl font-bold">Калории</h1>
       <button
         class="px-3 py-1.5 rounded-lg text-sm transition-colors"
-        style="background: rgba(99,102,241,0.15); color: #6366f1;"
+        style="background: rgba(226,83,43,0.15); color: #e2532b;"
         @click="showProfileDialog = true"
       >
         Настройки
@@ -15,17 +15,17 @@
 
     <!-- Date picker -->
     <div class="flex items-center gap-2 mb-5">
-      <button class="p-1.5 rounded-lg" style="color:rgba(255,255,255,0.5);" @click="prevDay">
+      <button class="p-1.5 rounded-lg" style="color:rgba(168,153,124,0.82);" @click="prevDay">
         <ChevronLeft class="w-5 h-5" />
       </button>
       <input
         v-model="store.selectedDate"
         type="date"
         class="flex-1 rounded-xl px-3 py-2 text-sm text-center focus:outline-none"
-        style="background:#1a1a1a; border:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.87);"
+        style="background:#211a12; border:1px solid rgba(243,234,214,0.10); color:rgba(243,234,214,0.92);"
         @change="onDateChange"
       />
-      <button class="p-1.5 rounded-lg" style="color:rgba(255,255,255,0.5);" @click="nextDay">
+      <button class="p-1.5 rounded-lg" style="color:rgba(168,153,124,0.82);" @click="nextDay">
         <ChevronRight class="w-5 h-5" />
       </button>
     </div>
@@ -35,12 +35,12 @@
     <template v-else>
 
       <!-- Calorie ring + progress card -->
-      <div class="rounded-2xl p-5 mb-5" style="background:#1a1a1a; border:1px solid rgba(255,255,255,0.08);">
+      <div class="rounded-2xl p-5 mb-5" style="background:#211a12; border:1px solid rgba(243,234,214,0.10);">
         <div class="flex items-center gap-6">
           <!-- Ring -->
           <div class="relative flex-shrink-0">
             <svg width="96" height="96" viewBox="0 0 96 96">
-              <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+              <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(243,234,214,0.06)" stroke-width="10"/>
               <circle
                 cx="48" cy="48" r="40" fill="none"
                 :stroke="calorieColor"
@@ -54,20 +54,20 @@
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
               <p class="text-base font-bold leading-none">{{ Math.round(totalCalories) }}</p>
-              <p class="text-[10px] mt-0.5" style="color:rgba(255,255,255,0.4);">ккал</p>
+              <p class="text-[10px] mt-0.5" style="color:rgba(168,153,124,0.62);">ккал</p>
             </div>
           </div>
 
           <!-- Macros -->
           <div class="flex-1 flex flex-col gap-2.5">
-            <MacroBar label="Белки" :value="totalProtein" :target="store.profile?.targetProtein ?? 150" color="#6366f1" unit="г" />
-            <MacroBar label="Жиры" :value="totalFat" :target="store.profile?.targetFat ?? 65" color="#f59e0b" unit="г" />
-            <MacroBar label="Углеводы" :value="totalCarbs" :target="store.profile?.targetCarbs ?? 250" color="#22c55e" unit="г" />
+            <MacroBar label="Белки" :value="totalProtein" :target="store.profile?.targetProtein ?? 150" color="#e2532b" unit="г" />
+            <MacroBar label="Жиры" :value="totalFat" :target="store.profile?.targetFat ?? 65" color="#e0aa4e" unit="г" />
+            <MacroBar label="Углеводы" :value="totalCarbs" :target="store.profile?.targetCarbs ?? 250" color="#86a861" unit="г" />
           </div>
         </div>
 
         <!-- Calorie label row -->
-        <div class="flex justify-between mt-4 text-xs" style="color:rgba(255,255,255,0.4);">
+        <div class="flex justify-between mt-4 text-xs" style="color:rgba(168,153,124,0.62);">
           <span>{{ Math.round(totalCalories) }} / {{ store.profile?.targetCalories ?? 2000 }} ккал</span>
           <span :style="{ color: calorieColor }">{{ Math.round(store.calorieProgress) }}%</span>
         </div>
@@ -95,14 +95,14 @@
           <UiInput v-model="form.name" label="Название *" placeholder="Гречка, куриная грудка..." :error="formErrors.name" />
 
           <div>
-            <label class="text-sm block mb-1" style="color:rgba(255,255,255,0.5);">Приём пищи</label>
-            <div class="flex rounded-xl overflow-hidden border" style="border-color:rgba(255,255,255,0.1);">
+            <label class="text-sm block mb-1" style="color:rgba(168,153,124,0.82);">Приём пищи</label>
+            <div class="flex rounded-xl overflow-hidden border" style="border-color:rgba(243,234,214,0.10);">
               <button
                 v-for="m in MEALS" :key="m.id"
                 class="flex-1 py-1.5 text-xs font-medium transition-colors"
                 :style="form.mealType === m.id
-                  ? 'background:#6366f1; color:#fff;'
-                  : 'background:transparent; color:rgba(255,255,255,0.5);'"
+                  ? 'background:#e2532b; color:#fff;'
+                  : 'background:transparent; color:rgba(168,153,124,0.82);'"
                 @click="form.mealType = m.id"
               >{{ m.shortLabel }}</button>
             </div>
@@ -119,12 +119,12 @@
           </div>
 
           <div>
-            <label class="text-sm block mb-1" style="color:rgba(255,255,255,0.5);">Дата</label>
+            <label class="text-sm block mb-1" style="color:rgba(168,153,124,0.82);">Дата</label>
             <input
               v-model="form.date"
               type="date"
               class="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style="background:#242424; border:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.87);"
+              style="background:#2b2118; border:1px solid rgba(243,234,214,0.10); color:rgba(243,234,214,0.92);"
             />
           </div>
         </div>
@@ -157,7 +157,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, defineComponent, h } from 'vue';
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Sunrise, Sun, Moon, Apple } from 'lucide-vue-next';
+import type { Component } from 'vue';
 import { useCaloriesStore } from '../stores/calories.store';
 import { useNotify } from '../composables/useNotify';
 import { UiButton, UiDialog, UiInput, UiSpinner } from '../components/ui';
@@ -171,10 +172,10 @@ const store = useCaloriesStore();
 const { notify } = useNotify();
 
 const MEALS = [
-  { id: 'breakfast' as const, label: 'Завтрак', shortLabel: 'Завтрак', emoji: '🌅' },
-  { id: 'lunch' as const, label: 'Обед', shortLabel: 'Обед', emoji: '☀️' },
-  { id: 'dinner' as const, label: 'Ужин', shortLabel: 'Ужин', emoji: '🌙' },
-  { id: 'snack' as const, label: 'Перекус', shortLabel: 'Перекус', emoji: '🍎' },
+  { id: 'breakfast' as const, label: 'Завтрак', shortLabel: 'Завтрак', icon: Sunrise },
+  { id: 'lunch' as const, label: 'Обед', shortLabel: 'Обед', icon: Sun },
+  { id: 'dinner' as const, label: 'Ужин', shortLabel: 'Ужин', icon: Moon },
+  { id: 'snack' as const, label: 'Перекус', shortLabel: 'Перекус', icon: Apple },
 ];
 
 // ─── Computed ──────────────────────────────────────────────────────────────────
@@ -191,9 +192,9 @@ const ringOffset = computed(() => {
 
 const calorieColor = computed(() => {
   const p = store.calorieProgress;
-  if (p >= 100) return '#ef4444';
-  if (p >= 80) return '#f59e0b';
-  return '#6366f1';
+  if (p >= 100) return '#d6452b';
+  if (p >= 80) return '#e0aa4e';
+  return '#e2532b';
 });
 
 // ─── Date navigation ───────────────────────────────────────────────────────────
@@ -351,11 +352,11 @@ const MacroBar = defineComponent({
     const pct = computed(() => Math.min(100, ((props.value ?? 0) / (props.target ?? 1)) * 100));
     return () =>
       h('div', {}, [
-        h('div', { class: 'flex justify-between text-xs mb-1', style: 'color:rgba(255,255,255,0.5);' }, [
+        h('div', { class: 'flex justify-between text-xs mb-1', style: 'color:rgba(168,153,124,0.82);' }, [
           h('span', {}, props.label),
           h('span', {}, `${Math.round(props.value ?? 0)}/${props.target ?? 0} ${props.unit}`),
         ]),
-        h('div', { class: 'rounded-full overflow-hidden', style: 'background:rgba(255,255,255,0.08); height:5px;' }, [
+        h('div', { class: 'rounded-full overflow-hidden', style: 'background:rgba(243,234,214,0.10); height:5px;' }, [
           h('div', {
             class: 'h-full rounded-full',
             style: `background:${props.color}; width:${pct.value}%; transition:width 0.3s;`,
@@ -367,7 +368,7 @@ const MacroBar = defineComponent({
 
 const MealSection = defineComponent({
   props: {
-    meal: Object as () => { id: string; label: string; emoji: string },
+    meal: Object as () => { id: string; label: string; icon: Component },
     entries: Array as () => FoodEntry[],
   },
   emits: ['add', 'delete'],
@@ -376,18 +377,18 @@ const MealSection = defineComponent({
       (props.entries ?? []).reduce((s, e) => s + e.calories, 0),
     );
     return () =>
-      h('div', { class: 'rounded-2xl overflow-hidden', style: 'background:#1a1a1a; border:1px solid rgba(255,255,255,0.08);' }, [
+      h('div', { class: 'rounded-2xl overflow-hidden', style: 'background:#211a12; border:1px solid rgba(243,234,214,0.10);' }, [
         // Header
-        h('div', { class: 'flex items-center justify-between px-4 py-3', style: 'border-bottom:1px solid rgba(255,255,255,0.06);' }, [
+        h('div', { class: 'flex items-center justify-between px-4 py-3', style: 'border-bottom:1px solid rgba(243,234,214,0.06);' }, [
           h('div', { class: 'flex items-center gap-2' }, [
-            h('span', { class: 'text-base' }, props.meal?.emoji),
+            props.meal?.icon ? h(props.meal.icon, { class: 'w-4 h-4', style: 'color:rgba(168,153,124,0.82);' }) : null,
             h('p', { class: 'text-sm font-semibold' }, props.meal?.label),
-            h('span', { class: 'text-xs', style: 'color:rgba(255,255,255,0.35);' }, totalCal.value ? `${Math.round(totalCal.value)} ккал` : ''),
+            h('span', { class: 'text-xs', style: 'color:rgba(243,234,214,0.35);' }, totalCal.value ? `${Math.round(totalCal.value)} ккал` : ''),
           ]),
           h('button',
             {
               class: 'flex items-center gap-1 text-xs px-2 py-1 rounded-lg',
-              style: 'color:#6366f1; background:rgba(99,102,241,0.1);',
+              style: 'color:#e2532b; background:rgba(226,83,43,0.1);',
               onClick: () => emit('add', props.meal?.id),
             },
             [h(Plus, { class: 'w-3.5 h-3.5' }), 'Добавить'],
@@ -398,27 +399,27 @@ const MealSection = defineComponent({
           h('div', {
             key: entry.id,
             class: 'flex items-center gap-3 px-4 py-2.5',
-            style: 'border-bottom:1px solid rgba(255,255,255,0.04);',
+            style: 'border-bottom:1px solid rgba(243,234,214,0.04);',
           }, [
             h('div', { class: 'flex-1 min-w-0' }, [
               h('p', { class: 'text-sm font-medium truncate' }, entry.name),
-              h('p', { class: 'text-xs mt-0.5', style: 'color:rgba(255,255,255,0.35);' },
+              h('p', { class: 'text-xs mt-0.5', style: 'color:rgba(243,234,214,0.35);' },
                 [
                   `Б:${Math.round(entry.protein)}г  Ж:${Math.round(entry.fat)}г  У:${Math.round(entry.carbs)}г`,
                   entry.weight ? `  · ${entry.weight}г` : '',
                 ].join(''),
               ),
             ]),
-            h('p', { class: 'text-sm font-semibold flex-shrink-0', style: 'color:#6366f1;' }, `${Math.round(entry.calories)} ккал`),
+            h('p', { class: 'text-sm font-semibold flex-shrink-0', style: 'color:#e2532b;' }, `${Math.round(entry.calories)} ккал`),
             h('button', {
               class: 'p-1 flex-shrink-0',
               onClick: () => emit('delete', entry.id),
-            }, [h(Trash2, { class: 'w-4 h-4', style: 'color:rgba(255,255,255,0.25);' })]),
+            }, [h(Trash2, { class: 'w-4 h-4', style: 'color:rgba(243,234,214,0.25);' })]),
           ]),
         ),
         // Empty state
         ...(!(props.entries ?? []).length
-          ? [h('div', { class: 'px-4 py-3 text-xs text-center', style: 'color:rgba(255,255,255,0.25);' }, 'Нет записей')]
+          ? [h('div', { class: 'px-4 py-3 text-xs text-center', style: 'color:rgba(243,234,214,0.25);' }, 'Нет записей')]
           : []),
       ]);
   },

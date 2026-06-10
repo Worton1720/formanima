@@ -19,7 +19,7 @@
         >
           <DialogPanel
             :class="['w-full rounded-2xl shadow-2xl', maxWidthClasses[maxWidth ?? 'md']]"
-            style="background: #1a1a1a;"
+            style="background: #211a12;"
           >
             <slot />
           </DialogPanel>

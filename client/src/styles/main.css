@@ -2,52 +2,169 @@
 
 @variant dark (&:is(.dark *));
 
+/* ============================================================
+   FORMANIMA — "Кузница души"
+   Тёмная тёплая обсидиановая база, угольно-янтарные акценты,
+   расплавленное золото и бронза. Дисплейный шрифт с засечками.
+   ============================================================ */
+
 @theme {
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
-  --color-surface: #1a1a1a;
-  --color-surface-variant: #242424;
-  --color-background: #0f0f0f;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-text: rgba(255, 255, 255, 0.87);
-  --color-text-muted: rgba(255, 255, 255, 0.5);
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-orange: #f97316;
+  /* — Surfaces (warm obsidian) — */
+  --color-background: #15110b;
+  --color-surface: #211a12;
+  --color-surface-variant: #2b2118;
+  --color-surface-raised: #332619;
 
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  /* — Ink (warm off-white) — */
+  --color-text: #f3ead6;
+  --color-text-muted: #a8997c;
+  --color-text-faint: #6f6450;
 
-  --font-family-sans: 'Inter', system-ui, sans-serif;
+  /* — Forge accents — */
+  --color-primary: #e2532b;        /* ember (расплавленный металл) */
+  --color-primary-hover: #c8431f;
+  --color-ember: #e2532b;
+  --color-gold: #e0aa4e;           /* расплавленное золото — XP/уровень */
+  --color-bronze: #9a7a47;
+
+  /* — Semantic — */
+  --color-success: #86a861;        /* патина */
+  --color-warning: #e0aa4e;
+  --color-error: #d6452b;
+  --color-orange: #e2532b;
+
+  /* — Lines — */
+  --color-border: rgba(243, 234, 214, 0.10);
+  --color-border-strong: rgba(224, 170, 78, 0.22);
+
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+
+  --font-sans: 'Onest', system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
-/* Base */
+/* ============================================================
+   Base
+   ============================================================ */
 * { box-sizing: border-box; }
 
 html, body {
-  background-color: #0f0f0f;
-  color: rgba(255, 255, 255, 0.87);
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #15110b;
+  color: #f3ead6;
+  font-family: 'Onest', system-ui, sans-serif;
+  font-feature-settings: 'ss01';
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+}
+
+/* Тёплая атмосфера горна: один очаг света сверху + угольный низ */
+body {
+  background-color: #15110b;
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(226, 83, 43, 0.16) 0%, rgba(226, 83, 43, 0) 55%),
+    radial-gradient(90% 60% at 85% 8%, rgba(224, 170, 78, 0.08) 0%, rgba(224, 170, 78, 0) 50%),
+    linear-gradient(180deg, #1a140d 0%, #15110b 38%, #120e09 100%);
+  background-attachment: fixed;
+}
+
+/* Зернистая текстура — плёнка ковки поверх всего */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 #app {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0f0f0f; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+/* Дисплейные заголовки — гербовый засечный шрифт */
+.font-display,
+h1.display, .text-display {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.01em;
+}
 
-/* Router link reset */
+/* Цифры статистики — моноширинный «прибор» */
+.font-stat, .tabular {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Каллиграфический разделитель-чеканка */
+.forge-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(224, 170, 78, 0.35), transparent);
+}
+
+/* Тиснёная рамка-карточка горна */
+.forge-card {
+  background:
+    linear-gradient(180deg, rgba(243, 234, 214, 0.025), rgba(0, 0, 0, 0) 40%),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow:
+    inset 0 1px 0 rgba(243, 234, 214, 0.04),
+    0 14px 40px -24px rgba(0, 0, 0, 0.9);
+}
+
+/* Светящийся янтарный ободок для акцентных поверхностей */
+.forge-glow {
+  box-shadow:
+    inset 0 1px 0 rgba(243, 234, 214, 0.06),
+    0 0 0 1px rgba(224, 170, 78, 0.18),
+    0 18px 50px -22px rgba(226, 83, 43, 0.45);
+}
+
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(224, 170, 78, 0.18);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(224, 170, 78, 0.32); }
+
+/* selection */
+::selection { background: rgba(226, 83, 43, 0.35); color: #fff; }
+
 a { color: inherit; text-decoration: none; }
 
-/* Transitions */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
+/* ============================================================
+   Transitions & motion
+   ============================================================ */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.18s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* Spinner keyframe */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
+
+/* Появление снизу со сдвигом — для staggered reveal */
+@keyframes forge-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.forge-rise {
+  opacity: 0;
+  animation: forge-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Дыхание угля — пульсация свечения */
+@keyframes ember-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+.ember-pulse { animation: ember-pulse 3.2s ease-in-out infinite; }

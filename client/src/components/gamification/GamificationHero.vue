@@ -1,42 +1,54 @@
 <template>
   <div
-    class="rounded-2xl p-4 mb-4 cursor-pointer relative overflow-hidden"
-    style="background: linear-gradient(135deg, #1a1060 0%, #6366f1 100%);"
+    class="forge-card forge-glow group relative mb-5 cursor-pointer overflow-hidden rounded-2xl p-5"
     @click="router.push('/achievements')"
   >
-    <!-- Faint rank icon background -->
-    <component
-      :is="rankIcon"
-      class="absolute right-4 top-1/2 -translate-y-1/2 w-20 h-20 text-white pointer-events-none"
-      style="opacity: 0.1;"
-    />
+    <!-- Тлеющий очаг в углу -->
+    <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl ember-pulse"
+         style="background: radial-gradient(circle, rgba(226,83,43,0.35), rgba(226,83,43,0) 70%);" />
 
-    <div class="relative">
-      <div v-if="!profile" class="flex justify-center">
-        <UiSpinner size="sm" class="text-white" />
+    <div v-if="!profile" class="flex justify-center py-4">
+      <UiSpinner size="sm" class="text-gold" />
+    </div>
+
+    <div v-else class="relative flex items-center gap-5">
+      <!-- Медальон ранга -->
+      <div class="relative flex-shrink-0">
+        <div class="flex h-16 w-16 items-center justify-center rounded-full border border-border-strong bg-surface-variant"
+             style="box-shadow: inset 0 0 14px rgba(224,170,78,0.18), 0 0 0 4px rgba(224,170,78,0.06);">
+          <component :is="rankIcon" class="h-8 w-8 text-gold" />
+        </div>
+        <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full border border-border-strong bg-background px-2 py-0.5 font-stat text-[10px] font-bold text-gold">
+          LV {{ profile.level }}
+        </span>
       </div>
-      <template v-else>
-        <p class="text-[11px] font-bold uppercase tracking-widest mb-2" style="color: rgba(255,255,255,0.7);">
-          {{ rankLabel }} · Уровень {{ profile.level }}
-        </p>
 
-        <div class="rounded-full overflow-hidden mb-1" style="background: rgba(255,255,255,0.2); height: 8px;">
+      <!-- Прогресс -->
+      <div class="min-w-0 flex-1">
+        <div class="mb-2 flex items-baseline justify-between gap-2">
+          <h2 class="font-display text-xl leading-none text-text">{{ rankLabel }}</h2>
+          <span class="flex items-center gap-1 rounded-full border border-border bg-surface-variant px-2 py-0.5">
+            <Flame class="h-3.5 w-3.5 text-primary" />
+            <span class="font-stat text-xs font-bold text-gold">{{ profile.totalStrikes }}</span>
+          </span>
+        </div>
+
+        <div class="relative mb-1.5 h-2.5 overflow-hidden rounded-full" style="background: rgba(243,234,214,0.08);">
           <div
-            :style="{ width: `${xpPercent}%`, height: '100%', background: 'white', borderRadius: '9999px', transition: 'width 0.3s ease' }"
+            class="h-full rounded-full transition-[width] duration-500 ease-out"
+            :style="{
+              width: `${xpPercent}%`,
+              background: 'linear-gradient(90deg, #d6451f, #e2532b 45%, #e0aa4e)',
+              boxShadow: '0 0 10px rgba(226,83,43,0.6)',
+            }"
           />
         </div>
 
-        <div class="flex justify-between mb-3">
-          <span class="text-[11px]" style="color: rgba(255,255,255,0.6);">{{ profile.xpCurrentLevel }} XP</span>
-          <span class="text-[11px]" style="color: rgba(255,255,255,0.6);">{{ profile.xpToNextLevel }} XP</span>
+        <div class="flex justify-between font-stat text-[11px] text-text-muted">
+          <span>{{ profile.xpCurrentLevel }} XP</span>
+          <span class="text-text-faint">до уровня {{ profile.xpToNextLevel }} XP</span>
         </div>
-
-        <div class="flex items-center gap-1">
-          <Flame class="w-4 h-4 text-orange-400" />
-          <span class="text-sm font-bold text-white">{{ profile.totalStrikes }}</span>
-          <span class="text-[11px]" style="color: rgba(255,255,255,0.6);">страйков</span>
-        </div>
-      </template>
+      </div>
     </div>
   </div>
 </template>

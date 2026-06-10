@@ -23,7 +23,13 @@ export class FinanceService {
     const where: any = { userId };
     if (month) {
       const [year, m] = month.split('-').map(Number);
-      where.date = { gte: new Date(year, m - 1, 1), lt: new Date(year, m, 1) };
+      // Transaction.date — @db.Date (хранится как UTC-полночь). Границы месяца тоже
+      // считаем в UTC: локальные конструкторы Date в TZ != UTC смещают границу на сутки
+      // и теряют последний день месяца (напр. 31-е в MSK).
+      where.date = {
+        gte: new Date(Date.UTC(year, m - 1, 1)),
+        lt: new Date(Date.UTC(year, m, 1)),
+      };
     }
     return this.prisma.transaction.findMany({ where, orderBy: { date: 'desc' } });
   }

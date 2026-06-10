@@ -7,9 +7,9 @@ import { StatsService } from './stats.service';
 export class StatsController {
   constructor(private stats: StatsService) {}
 
-  @Get('streak/:habitId')
-  getStreak(@Param('habitId') habitId: string, @Request() req: any) {
-    return this.stats.getStreak(habitId, req.user.userId);
+  @Get('streak/:goalId')
+  getStreak(@Param('goalId') goalId: string, @Request() req: any) {
+    return this.stats.getStreak(goalId, req.user.userId);
   }
 
   @Get('overview')
@@ -22,14 +22,14 @@ export class StatsController {
     return this.stats.getDailyStats(req.user.userId, days ? parseInt(days, 10) : 30);
   }
 
-  @Get('heatmap/:habitId')
+  @Get('heatmap/:goalId')
   getHeatmap(
-    @Param('habitId') habitId: string,
+    @Param('goalId') goalId: string,
     @Query('days') days: string,
     @Request() req: any,
   ) {
     const parsedDays = days ? parseInt(days, 10) : 90;
     const clampedDays = isNaN(parsedDays) || parsedDays <= 0 ? 90 : Math.min(parsedDays, 365);
-    return this.stats.getHeatmap(habitId, req.user.userId, clampedDays);
+    return this.stats.getHeatmap(goalId, req.user.userId, clampedDays);
   }
 }

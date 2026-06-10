@@ -1,27 +1,47 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
+/**
+ * Одноразовая миграция: раздел «Привычки» (модели Habit/Action) объединён
+ * с системой Целей. Habit → Goal(type='habit'), Action → Milestone (опц. шаг).
+ *
+ * В текущей схеме у привычек НЕТ данных о выполнении по дням, поэтому
+ * GoalProgress не создаётся — стрики начнут считаться с первой отметки в новой
+ * системе. Скрипт идемпотентен: повторный запуск не плодит дубли.
+ */
 async function migrate() {
-  console.log('Starting migration: Habits → Goals');
+  console.log('Starting migration: Habits → Goals(type=habit)');
 
   const habits = await prisma.habit.findMany({
-    include: {
-      actions: {
-        include: { completions: true },
-        orderBy: { order: 'asc' },
-      },
-    },
+    include: { actions: { orderBy: { order: 'asc' } } },
   });
 
   console.log(`Found ${habits.length} habits to migrate`);
 
   let goalsCreated = 0;
   let milestonesCreated = 0;
-  let progressCreated = 0;
+  let skipped = 0;
 
   for (const habit of habits) {
-    // 1. Создать Goal из Habit
+    // Идемпотентность: пропускаем, если habit-цель с тем же названием и
+    // временем создания у пользователя уже существует.
+    const existingGoal = await prisma.goal.findFirst({
+      where: {
+        userId: habit.userId,
+        type: 'habit',
+        title: habit.title,
+        createdAt: habit.createdAt,
+      },
+    });
+    if (existingGoal) {
+      skipped++;
+      continue;
+    }
+
     const goal = await prisma.goal.create({
       data: {
         userId: habit.userId,
@@ -32,15 +52,16 @@ async function migrate() {
         category: habit.category,
         color: habit.color,
         icon: habit.icon,
-        frequency: habit.frequency,
+        frequency: ['daily', 'weekly', 'monthly'].includes(habit.frequency)
+          ? habit.frequency
+          : 'daily',
         createdAt: habit.createdAt,
       },
     });
     goalsCreated++;
 
-    // 2. Создать Milestone из каждого Action
     for (const action of habit.actions) {
-      const milestone = await prisma.milestone.create({
+      await prisma.milestone.create({
         data: {
           goalId: goal.id,
           title: action.title,
@@ -49,40 +70,13 @@ async function migrate() {
         },
       });
       milestonesCreated++;
-
-      // 3. Создать GoalProgress из каждого Completion
-      for (const completion of action.completions) {
-        // Проверить дубликат (не используем @@unique с nullable milestoneId)
-        const existing = await prisma.goalProgress.findFirst({
-          where: {
-            goalId: goal.id,
-            userId: completion.userId,
-            milestoneId: milestone.id,
-            date: completion.date,
-          },
-        });
-
-        if (!existing) {
-          await prisma.goalProgress.create({
-            data: {
-              goalId: goal.id,
-              userId: completion.userId,
-              milestoneId: milestone.id,
-              date: completion.date,
-              value: 1,
-              completedAt: completion.completedAt,
-            },
-          });
-          progressCreated++;
-        }
-      }
     }
   }
 
   console.log('Migration complete:');
-  console.log(`  Goals created: ${goalsCreated}`);
+  console.log(`  Goals created:      ${goalsCreated}`);
   console.log(`  Milestones created: ${milestonesCreated}`);
-  console.log(`  GoalProgress created: ${progressCreated}`);
+  console.log(`  Habits skipped:     ${skipped} (already migrated)`);
 }
 
 migrate()

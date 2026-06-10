@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded-2xl p-6 shadow-2xl" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
-    <h2 class="text-lg font-semibold mb-5">{{ habit ? 'Редактировать привычку' : 'Новая привычка' }}</h2>
+  <div class="rounded-2xl p-6 shadow-2xl" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
+    <h2 class="text-lg font-semibold mb-5">{{ goal ? 'Редактировать привычку' : 'Новая привычка' }}</h2>
 
     <form class="flex flex-col gap-4" @submit.prevent="submit">
       <UiInput
@@ -23,16 +23,16 @@
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm block mb-1" style="color: rgba(255,255,255,0.5);">Цвет</label>
+          <label class="text-sm block mb-1" style="color: rgba(168,153,124,0.82);">Цвет</label>
           <input
             v-model="form.color"
             type="color"
             class="w-full h-10 rounded-xl cursor-pointer"
-            style="background: #242424; border: 1px solid rgba(255,255,255,0.08);"
+            style="background: #2b2118; border: 1px solid rgba(243,234,214,0.10);"
           />
         </div>
         <div>
-          <label class="text-sm block mb-1.5" style="color: rgba(255,255,255,0.5);">Иконка</label>
+          <label class="text-sm block mb-1.5" style="color: rgba(168,153,124,0.82);">Иконка</label>
           <div class="grid grid-cols-5 gap-1.5">
             <button
               v-for="opt in iconOptions"
@@ -40,77 +40,29 @@
               type="button"
               class="flex items-center justify-center p-2.5 rounded-xl transition-colors"
               :style="form.icon === opt.value
-                ? 'background: rgba(99,102,241,0.2); border: 1px solid #6366f1;'
-                : 'background: #242424; border: 1px solid rgba(255,255,255,0.08);'"
+                ? 'background: rgba(226,83,43,0.2); border: 1px solid #e2532b;'
+                : 'background: #2b2118; border: 1px solid rgba(243,234,214,0.10);'"
               :title="opt.label"
               @click="form.icon = opt.value"
             >
               <component
                 :is="getIcon(opt.value)"
                 class="w-5 h-5"
-                :style="form.icon === opt.value ? 'color: #6366f1;' : 'color: rgba(255,255,255,0.5);'"
+                :style="form.icon === opt.value ? 'color: #e2532b;' : 'color: rgba(168,153,124,0.82);'"
               />
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Actions section -->
-      <div>
-        <div class="flex items-center gap-2 mb-3">
-          <div class="h-px flex-1" style="background: rgba(255,255,255,0.08);" />
-          <span class="text-xs px-2" style="color: rgba(255,255,255,0.4);">Действия</span>
-          <div class="h-px flex-1" style="background: rgba(255,255,255,0.08);" />
-        </div>
-
-        <draggable v-model="localActions" item-key="title" handle=".drag-handle" ghost-class="opacity-40">
-          <template #item="{ index }">
-            <div class="flex items-center gap-2 mb-2">
-              <GripVertical
-                class="drag-handle w-4 h-4 flex-shrink-0 cursor-grab"
-                style="color: rgba(255,255,255,0.3);"
-              />
-              <input
-                v-model="localActions[index].title"
-                class="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
-                style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
-              />
-              <UiButton variant="ghost" size="sm" type="button" @click="removeAction(index)">
-                <X class="w-4 h-4" style="color: #ef4444;" />
-              </UiButton>
-            </div>
-          </template>
-        </draggable>
-
-        <div class="flex gap-2">
-          <input
-            v-model="newActionTitle"
-            placeholder="Добавить действие..."
-            class="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
-            style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
-            :disabled="localActions.length >= 10"
-            @keydown.enter.prevent="addAction"
-          />
-          <UiButton
-            variant="tonal"
-            size="sm"
-            type="button"
-            :disabled="!newActionTitle.trim() || localActions.length >= 10"
-            @click="addAction"
-          >
-            <Plus class="w-4 h-4" />
-          </UiButton>
-        </div>
-        <p v-if="showActionsError" class="text-xs mt-1" style="color: #ef4444;">
-          Добавь хотя бы одно действие
-        </p>
-      </div>
+      <p class="text-xs" style="color: rgba(168,153,124,0.62);">
+        Отмечай выполнение каждый день на странице привычки — серия (streak) и история
+        соберутся автоматически. Промежуточные шаги можно добавить внутри привычки.
+      </p>
 
       <div class="flex gap-2 justify-end pt-2">
         <UiButton variant="ghost" type="button" @click="$emit('cancel')">Отмена</UiButton>
-        <UiButton type="submit" :loading="loading" :disabled="localActions.length === 0">
-          Сохранить
-        </UiButton>
+        <UiButton type="submit" :loading="loading">Сохранить</UiButton>
       </div>
     </form>
   </div>
@@ -118,15 +70,13 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import draggable from 'vuedraggable';
-import { GripVertical, X, Plus } from 'lucide-vue-next';
 import { UiButton, UiInput, UiTextarea, UiSelect } from '../ui';
 import { getIcon } from '../../utils/iconMap';
-import type { Habit } from '../../types';
+import type { Goal, CreateGoalDto } from '../../types';
 
-const props = defineProps<{ habit?: Habit }>();
+const props = defineProps<{ goal?: Goal }>();
 const emit = defineEmits<{
-  submit: [data: Partial<Habit>, actions: { id?: string; title: string; order: number }[], removedIds: string[]];
+  submit: [data: CreateGoalDto];
   cancel: [];
 }>();
 
@@ -137,8 +87,8 @@ const categories = [
 ];
 const frequencies = [
   { value: 'daily', label: 'Ежедневно' },
-  { value: 'weekdays', label: 'По будням' },
-  { value: 'custom', label: 'Кастомная' },
+  { value: 'weekly', label: 'Еженедельно' },
+  { value: 'monthly', label: 'Ежемесячно' },
 ];
 const iconOptions = [
   { value: 'mdi-fire', label: 'Огонь' }, { value: 'mdi-heart', label: 'Сердце' },
@@ -153,61 +103,47 @@ const iconOptions = [
 
 const loading = ref(false);
 const titleError = ref('');
-const newActionTitle = ref('');
-const showActionsError = ref(false);
-const removedActionIds = ref<string[]>([]);
-const localActions = ref<{ id?: string; title: string; order: number }[]>([]);
 
 const form = ref({
-  title: props.habit?.title ?? '',
-  description: props.habit?.description ?? '',
-  category: props.habit?.category ?? 'other',
-  frequency: props.habit?.frequency ?? 'daily',
-  color: props.habit?.color ?? '#6366f1',
-  icon: props.habit?.icon ?? 'mdi-fire',
+  title: props.goal?.title ?? '',
+  description: props.goal?.description ?? '',
+  category: props.goal?.category ?? 'other',
+  frequency: props.goal?.frequency ?? 'daily',
+  color: props.goal?.color ?? '#e2532b',
+  icon: props.goal?.icon ?? 'mdi-fire',
 });
 
 watch(
-  () => props.habit,
-  (h) => {
-    if (h) {
+  () => props.goal,
+  (g) => {
+    if (g) {
       form.value = {
-        title: h.title,
-        description: h.description ?? '',
-        category: h.category,
-        frequency: h.frequency,
-        color: h.color,
-        icon: h.icon ?? 'mdi-fire',
+        title: g.title,
+        description: g.description ?? '',
+        category: g.category,
+        frequency: ['daily', 'weekly', 'monthly'].includes(g.frequency) ? g.frequency : 'daily',
+        color: g.color,
+        icon: g.icon ?? 'mdi-fire',
       };
-      localActions.value = h.actions.map((a) => ({ id: a.id, title: a.title, order: a.order }));
     }
-    removedActionIds.value = [];
   },
   { immediate: true },
 );
 
-function addAction() {
-  const title = newActionTitle.value.trim();
-  if (!title || localActions.value.length >= 10) return;
-  localActions.value.push({ title, order: localActions.value.length });
-  newActionTitle.value = '';
-  showActionsError.value = false;
-}
-
-function removeAction(index: number) {
-  const action = localActions.value[index];
-  if (action.id) removedActionIds.value.push(action.id);
-  localActions.value.splice(index, 1);
-}
-
-async function submit() {
+function submit() {
   titleError.value = '';
   if (!form.value.title.trim()) { titleError.value = 'Введите название'; return; }
-  if (localActions.value.length === 0) { showActionsError.value = true; return; }
   loading.value = true;
   try {
-    const orderedActions = localActions.value.map((a, i) => ({ ...a, order: i }));
-    emit('submit', { ...form.value }, orderedActions, removedActionIds.value);
+    emit('submit', {
+      title: form.value.title.trim(),
+      description: form.value.description.trim() || undefined,
+      type: 'habit',
+      category: form.value.category,
+      frequency: form.value.frequency,
+      color: form.value.color,
+      icon: form.value.icon,
+    });
   } finally {
     loading.value = false;
   }

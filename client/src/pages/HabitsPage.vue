@@ -3,38 +3,41 @@
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
         <h1 class="text-2xl font-bold">Мои привычки</h1>
-        <span class="px-2 py-0.5 rounded-full text-xs font-medium" style="background: rgba(99,102,241,0.15); color: #6366f1;">
-          {{ store.habits.length }}/10
+        <span class="px-2 py-0.5 rounded-full text-xs font-medium" style="background: rgba(226,83,43,0.15); color: #e2532b;">
+          {{ habits.length }}/10
         </span>
       </div>
-      <UiButton :disabled="store.habits.length >= 10" @click="showForm = true">
+      <UiButton :disabled="habits.length >= 10" @click="showForm = true">
         <Plus class="w-4 h-4 mr-1" />
         Добавить
       </UiButton>
     </div>
 
     <UiDialog v-model="showForm" max-width="lg">
-      <HabitForm :habit="editingHabit" @submit="onSubmit" @cancel="closeForm" />
+      <HabitForm :goal="editingHabit" @submit="onSubmit" @cancel="closeForm" />
     </UiDialog>
 
-    <div v-if="store.loading" class="flex justify-center py-8">
+    <div v-if="store.loading && !habits.length" class="flex justify-center py-8">
       <UiSpinner />
     </div>
 
-    <div v-else-if="store.habits.length" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    <div v-else-if="habits.length" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
       <HabitCard
-        v-for="habit in store.habits"
+        v-for="habit in habits"
         :key="habit.id"
         :habit="habit"
+        :marked-today="store.isMarkedToday(habit.id, today)"
+        :marking="markingId === habit.id"
         @edit="startEdit"
         @archive="archiveHabit"
+        @toggle="toggleToday"
       />
     </div>
 
     <div v-else class="flex-1 flex flex-col items-center justify-center text-center py-8">
-      <Flame class="w-12 h-12 mx-auto mb-4" style="color: rgba(255,255,255,0.2);" />
+      <Flame class="w-12 h-12 mx-auto mb-4" style="color: rgba(243,234,214,0.18);" />
       <h3 class="text-lg font-medium mb-2">Нет привычек</h3>
-      <p class="text-sm mb-6" style="color: rgba(255,255,255,0.4);">Создайте первую привычку, чтобы начать</p>
+      <p class="text-sm mb-6" style="color: rgba(168,153,124,0.62);">Создайте первую привычку, чтобы начать</p>
       <UiButton @click="showForm = true">
         <Plus class="w-4 h-4 mr-1" /> Создать привычку
       </UiButton>
@@ -43,30 +46,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Plus, Flame } from 'lucide-vue-next';
-import { useHabitsStore } from '../stores/habits.store';
+import dayjs from 'dayjs';
+import { useGoalsStore } from '../stores/goals.store';
 import { useNotify } from '../composables/useNotify';
-import { actionsApi } from '../api/actions.api';
 import { UiButton, UiDialog, UiSpinner } from '../components/ui';
 import HabitCard from '../components/habits/HabitCard.vue';
 import HabitForm from '../components/habits/HabitForm.vue';
-import type { Habit } from '../types';
+import type { Goal, CreateGoalDto } from '../types';
 
-const store = useHabitsStore();
+const store = useGoalsStore();
 const { notify } = useNotify();
 const showForm = ref(false);
-const editingHabit = ref<Habit | undefined>();
+const editingHabit = ref<Goal | undefined>();
+const markingId = ref<string | null>(null);
+const today = dayjs().format('YYYY-MM-DD');
+
+const habits = computed(() => store.habitGoals);
 
 onMounted(async () => {
   try {
-    await store.fetchAll();
+    await Promise.all([store.fetchGoals(), store.fetchTodayGoals()]);
   } catch {
     notify('Не удалось загрузить привычки');
   }
 });
 
-function startEdit(habit: Habit) {
+function startEdit(habit: Goal) {
   editingHabit.value = habit;
   showForm.value = true;
 }
@@ -76,29 +83,13 @@ function closeForm() {
   editingHabit.value = undefined;
 }
 
-async function onSubmit(
-  data: Partial<Habit>,
-  actions: { id?: string; title: string; order: number }[],
-  removedIds: string[],
-) {
+async function onSubmit(data: CreateGoalDto) {
   try {
-    let habitId: string;
     if (editingHabit.value) {
-      await store.update(editingHabit.value.id, data);
-      habitId = editingHabit.value.id;
+      await store.updateGoal(editingHabit.value.id, data);
     } else {
-      const habit = await store.create(data);
-      habitId = habit.id;
+      await store.createGoal(data);
     }
-
-    await Promise.all(removedIds.map((id) => actionsApi.delete(habitId, id)));
-
-    const newActions = actions.filter((a) => !a.id);
-    for (const a of newActions) {
-      await actionsApi.create(habitId, a.title, actions.indexOf(a));
-    }
-
-    await store.fetchAll();
     closeForm();
   } catch (e: any) {
     const msg = e?.response?.data?.message;
@@ -106,11 +97,22 @@ async function onSubmit(
   }
 }
 
-async function archiveHabit(habitId: string) {
+async function archiveHabit(id: string) {
   try {
-    await store.archive(habitId);
+    await store.archiveGoal(id);
   } catch {
     notify('Не удалось архивировать привычку');
+  }
+}
+
+async function toggleToday(id: string) {
+  markingId.value = id;
+  try {
+    await store.toggleTodayProgress(id, today);
+  } catch {
+    notify('Не удалось обновить прогресс');
+  } finally {
+    markingId.value = null;
   }
 }
 </script>

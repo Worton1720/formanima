@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between mb-5">
       <h1 class="text-2xl font-bold">Мои цели</h1>
       <div class="flex items-center gap-2">
-        <router-link to="/goals/archive" class="text-sm" style="color: rgba(255,255,255,0.4);">
+        <router-link to="/goals/archive" class="text-sm" style="color: rgba(168,153,124,0.62);">
           Архив
         </router-link>
         <UiButton size="sm" @click="showCreateDialog = true">
@@ -21,8 +21,8 @@
 
     <!-- Empty State -->
     <template v-else-if="store.goals.length === 0">
-      <div class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color: rgba(255,255,255,0.3);">
-        <div class="text-6xl mb-4">🎯</div>
+      <div class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color: rgba(243,234,214,0.3);">
+        <Target class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
         <p class="font-medium mb-1">Нет активных целей</p>
         <p class="text-sm mb-4">Создай первую цель, чтобы начать отслеживать прогресс</p>
         <UiButton @click="showCreateDialog = true">
@@ -38,15 +38,15 @@
           v-for="goal in store.goals"
           :key="goal.id"
           class="px-4 py-4 rounded-xl"
-          style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);"
+          style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);"
         >
           <!-- Goal header -->
           <div class="flex items-start gap-3 mb-3">
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
-              :style="{ background: hexToAlpha(goal.color || '#6366f1', 0.15) }"
+              :style="{ background: hexToAlpha(goal.color || '#e2532b', 0.15) }"
             >
-              {{ goal.icon || '🎯' }}
+              <GoalIcon :icon="goal.icon" :color="goal.color" class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
@@ -56,7 +56,7 @@
                   :style="typeBadgeStyle(goal.type)"
                 >{{ typeLabel(goal.type) }}</span>
               </div>
-              <p v-if="goal.description" class="text-xs mt-0.5 truncate" style="color: rgba(255,255,255,0.4);">
+              <p v-if="goal.description" class="text-xs mt-0.5 truncate" style="color: rgba(168,153,124,0.62);">
                 {{ goal.description }}
               </p>
             </div>
@@ -64,20 +64,20 @@
 
           <!-- Progress bar -->
           <template v-if="goal.targetValue && goal.targetValue > 0">
-            <div class="flex justify-between text-xs mb-1" style="color: rgba(255,255,255,0.5);">
+            <div class="flex justify-between text-xs mb-1" style="color: rgba(168,153,124,0.82);">
               <span>Прогресс</span>
               <span>{{ goal.currentValue }} / {{ goal.targetValue }}</span>
             </div>
             <UiProgress
               :model-value="(goal.currentValue / goal.targetValue) * 100"
-              :color="goal.color || '#6366f1'"
+              :color="goal.color || '#e2532b'"
               height="sm"
               class="mb-3"
             />
           </template>
 
           <!-- Deadline -->
-          <p v-if="goal.deadline" class="text-xs mb-3" style="color: rgba(255,255,255,0.4);">
+          <p v-if="goal.deadline" class="text-xs mb-3" style="color: rgba(168,153,124,0.62);">
             Срок: {{ formatDate(goal.deadline) }}
           </p>
 
@@ -134,12 +134,12 @@
             :options="FREQUENCIES"
           />
           <div>
-            <label class="text-sm block mb-1" style="color: rgba(255,255,255,0.5);">Дедлайн (необязательно)</label>
+            <label class="text-sm block mb-1" style="color: rgba(168,153,124,0.82);">Дедлайн (необязательно)</label>
             <input
               v-model="form.deadline"
               type="date"
               class="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
+              style="background: #2b2118; border: 1px solid rgba(243,234,214,0.10); color: rgba(243,234,214,0.92);"
             />
           </div>
         </div>
@@ -155,10 +155,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Plus, Eye, Archive } from 'lucide-vue-next';
+import { Plus, Eye, Archive, Target } from 'lucide-vue-next';
 import { useGoalsStore } from '../stores/goals.store';
 import { useNotify } from '../composables/useNotify';
 import { UiButton, UiDialog, UiInput, UiTextarea, UiSelect, UiSpinner, UiProgress } from '../components/ui';
+import GoalIcon from '../components/common/GoalIcon.vue';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 
@@ -187,17 +188,17 @@ const FREQUENCIES = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  habit: 'rgba(99,102,241,0.2)',
+  habit: 'rgba(226,83,43,0.2)',
   project: 'rgba(59,130,246,0.2)',
   nutrition: 'rgba(34,197,94,0.2)',
   finance: 'rgba(234,179,8,0.2)',
-  fitness: 'rgba(249,115,22,0.2)',
+  fitness: 'rgba(226,83,43,0.2)',
   other: 'rgba(107,114,128,0.2)',
 };
 
 const TYPE_TEXT_COLORS: Record<string, string> = {
   habit: '#818cf8',
-  project: '#60a5fa',
+  project: '#9a7a47',
   nutrition: '#4ade80',
   finance: '#facc15',
   fitness: '#fb923c',
@@ -226,7 +227,7 @@ function typeBadgeStyle(type: string) {
 
 function hexToAlpha(hex: string, alpha: number) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return `rgba(99,102,241,${alpha})`;
+  if (!result) return `rgba(226,83,43,${alpha})`;
   const r = parseInt(result[1], 16);
   const g = parseInt(result[2], 16);
   const b = parseInt(result[3], 16);

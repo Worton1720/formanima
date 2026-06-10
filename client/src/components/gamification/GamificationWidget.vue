@@ -1,25 +1,34 @@
 <template>
-  <div class="rounded-2xl p-4 mb-4" style="background: #242424; border: 1px solid rgba(255,255,255,0.08);">
+  <div class="forge-card mb-4 rounded-2xl p-4">
     <div class="flex items-center gap-3">
-      <component :is="rankIcon" class="w-8 h-8 flex-shrink-0" :style="{ color: rankColor }" />
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-sm font-medium">{{ rankLabel }}</span>
-          <span class="text-xs" style="color: rgba(255,255,255,0.5);">Уровень {{ profile?.level ?? 1 }}</span>
+      <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface-variant">
+        <component :is="rankIcon" class="h-5 w-5" :style="{ color: rankColor }" />
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="mb-1 flex items-center justify-between">
+          <span class="font-display text-base text-text">{{ rankLabel }}</span>
+          <span class="font-stat text-[11px] text-text-muted">LV {{ profile?.level ?? 1 }}</span>
         </div>
-        <div class="rounded-full overflow-hidden mb-1" style="background: rgba(255,255,255,0.1); height: 6px;">
+        <div class="mb-1 h-2 overflow-hidden rounded-full" style="background: rgba(243,234,214,0.08);">
           <div
-            :style="{ width: `${xpPercent}%`, height: '100%', background: '#6366f1', borderRadius: '9999px', transition: 'width 0.3s ease' }"
+            :style="{
+              width: `${xpPercent}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #d6451f, #e2532b 45%, #e0aa4e)',
+              borderRadius: '9999px',
+              boxShadow: '0 0 8px rgba(226,83,43,0.5)',
+              transition: 'width 0.4s ease',
+            }"
           />
         </div>
-        <div class="flex justify-between">
-          <span class="text-[11px]" style="color: rgba(255,255,255,0.5);">{{ profile?.xpCurrentLevel ?? 0 }} XP</span>
-          <span class="text-[11px]" style="color: rgba(255,255,255,0.5);">{{ profile?.xpToNextLevel ?? 100 }} XP</span>
+        <div class="flex justify-between font-stat text-[11px] text-text-muted">
+          <span>{{ profile?.xpCurrentLevel ?? 0 }} XP</span>
+          <span class="text-text-faint">{{ profile?.xpToNextLevel ?? 100 }} XP</span>
         </div>
       </div>
-      <div class="flex items-center gap-1 px-2 py-1 rounded-full" style="background: rgba(249,115,22,0.15);">
-        <Flame class="w-3.5 h-3.5 text-orange-400" />
-        <span class="text-xs font-medium text-orange-400">{{ profile?.totalStrikes ?? 0 }}</span>
+      <div class="flex items-center gap-1 rounded-full border border-border px-2 py-1" style="background: rgba(226,83,43,0.12);">
+        <Flame class="h-3.5 w-3.5 text-primary" />
+        <span class="font-stat text-xs font-bold text-gold">{{ profile?.totalStrikes ?? 0 }}</span>
       </div>
     </div>
   </div>
@@ -45,10 +54,10 @@ const rankIcons: Record<string, unknown> = {
   grandmaster: Crown,
 };
 const rankColors: Record<string, string> = {
-  apprentice: 'rgba(255,255,255,0.4)',
-  journeyman: '#60a5fa',
-  master: '#f97316',
-  grandmaster: '#f59e0b',
+  apprentice: 'rgba(168,153,124,0.62)',
+  journeyman: '#9a7a47',
+  master: '#e2532b',
+  grandmaster: '#e0aa4e',
 };
 const rankLabels: Record<string, string> = {
   apprentice: 'Подмастерье',
@@ -58,7 +67,7 @@ const rankLabels: Record<string, string> = {
 };
 
 const rankIcon = computed(() => rankIcons[gamification.rank] ?? Hammer);
-const rankColor = computed(() => rankColors[gamification.rank] ?? 'rgba(255,255,255,0.4)');
+const rankColor = computed(() => rankColors[gamification.rank] ?? 'rgba(168,153,124,0.62)');
 const rankLabel = computed(() => rankLabels[gamification.rank] ?? 'Подмастерье');
 
 onMounted(() => {

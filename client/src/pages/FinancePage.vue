@@ -5,41 +5,41 @@
     <div class="flex items-center justify-between mb-5">
       <h1 class="text-2xl font-bold">Финансы</h1>
       <div class="flex items-center gap-1">
-        <button class="p-1.5 rounded-lg" style="color:rgba(255,255,255,0.5);" @click="prevMonth"><ChevronLeft class="w-5 h-5"/></button>
+        <button class="p-1.5 rounded-lg" style="color:rgba(168,153,124,0.82);" @click="prevMonth"><ChevronLeft class="w-5 h-5"/></button>
         <span class="text-sm font-medium w-28 text-center">{{ monthLabel }}</span>
-        <button class="p-1.5 rounded-lg" style="color:rgba(255,255,255,0.5);" @click="nextMonth"><ChevronRight class="w-5 h-5"/></button>
+        <button class="p-1.5 rounded-lg" style="color:rgba(168,153,124,0.82);" @click="nextMonth"><ChevronRight class="w-5 h-5"/></button>
       </div>
     </div>
 
     <!-- Summary cards -->
     <div class="grid grid-cols-3 gap-3 mb-5">
       <div class="rounded-xl p-3 text-center" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);">
-        <p class="text-base font-bold" style="color:#22c55e;">+{{ fmt(store.summary.income) }}</p>
-        <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.5);">Доходы</p>
+        <p class="text-base font-bold" style="color:#86a861;">+{{ fmt(store.summary.income) }}</p>
+        <p class="text-xs mt-0.5" style="color:rgba(168,153,124,0.82);">Доходы</p>
       </div>
       <div class="rounded-xl p-3 text-center" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);">
-        <p class="text-base font-bold" style="color:#ef4444;">-{{ fmt(store.summary.expense) }}</p>
-        <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.5);">Расходы</p>
+        <p class="text-base font-bold" style="color:#d6452b;">-{{ fmt(store.summary.expense) }}</p>
+        <p class="text-xs mt-0.5" style="color:rgba(168,153,124,0.82);">Расходы</p>
       </div>
       <div class="rounded-xl p-3 text-center"
         :style="store.summary.balance >= 0
-          ? 'background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);'
+          ? 'background:rgba(226,83,43,0.1);border:1px solid rgba(226,83,43,0.2);'
           : 'background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);'">
-        <p class="text-base font-bold" :style="store.summary.balance >= 0 ? 'color:#6366f1;' : 'color:#ef4444;'">
-          {{ store.summary.balance >= 0 ? '+' : '' }}{{ fmt(store.summary.balance) }}
+        <p class="text-base font-bold" :style="store.summary.balance >= 0 ? 'color:#e2532b;' : 'color:#d6452b;'">
+          {{ store.summary.balance >= 0 ? '+' : '-' }}{{ fmt(store.summary.balance) }}
         </p>
-        <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.5);">Баланс</p>
+        <p class="text-xs mt-0.5" style="color:rgba(168,153,124,0.82);">Баланс</p>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="flex rounded-xl overflow-hidden border mb-5" style="border-color:rgba(255,255,255,0.1);">
+    <div class="flex rounded-xl overflow-hidden border mb-5" style="border-color:rgba(243,234,214,0.10);">
       <button
         v-for="tab in TABS" :key="tab.id"
         class="flex-1 py-2 text-xs font-medium transition-colors"
         :style="activeTab === tab.id
-          ? 'background:#6366f1;color:#fff;'
-          : 'background:transparent;color:rgba(255,255,255,0.5);'"
+          ? 'background:#e2532b;color:#fff;'
+          : 'background:transparent;color:rgba(168,153,124,0.82);'"
         @click="activeTab = tab.id"
       >{{ tab.label }}</button>
     </div>
@@ -56,32 +56,32 @@
           </UiButton>
         </div>
 
-        <div v-if="!store.transactions.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(255,255,255,0.3);">
-          <div class="text-5xl mb-4">💰</div>
+        <div v-if="!store.transactions.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(243,234,214,0.3);">
+          <Wallet class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
           <p class="font-medium mb-1">Нет транзакций</p>
           <p class="text-sm">Добавь первый доход или расход</p>
         </div>
 
         <div v-for="[day, txs] in store.grouped" :key="day" class="mb-4">
-          <p class="text-xs font-medium mb-2 px-1" style="color:rgba(255,255,255,0.4);">{{ formatDay(day) }}</p>
+          <p class="text-xs font-medium mb-2 px-1" style="color:rgba(168,153,124,0.62);">{{ formatDay(day) }}</p>
           <div class="flex flex-col gap-2">
             <div v-for="tx in txs" :key="tx.id"
               class="flex items-center gap-3 px-4 py-3 rounded-xl"
-              style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+              style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
               <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-base"
                 :style="tx.type==='income' ? 'background:rgba(34,197,94,0.15);' : 'background:rgba(239,68,68,0.15);'">
                 {{ catIcon(tx.category) }}
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium truncate">{{ tx.category }}</p>
-                <p v-if="tx.description" class="text-xs truncate" style="color:rgba(255,255,255,0.4);">{{ tx.description }}</p>
+                <p v-if="tx.description" class="text-xs truncate" style="color:rgba(168,153,124,0.62);">{{ tx.description }}</p>
               </div>
               <p class="text-sm font-semibold flex-shrink-0"
-                :style="tx.type==='income' ? 'color:#22c55e;' : 'color:#ef4444;'">
+                :style="tx.type==='income' ? 'color:#86a861;' : 'color:#d6452b;'">
                 {{ tx.type==='income' ? '+' : '-' }}{{ fmt(tx.amount) }}
               </p>
               <button class="p-1" @click="removeTx(tx.id)">
-                <Trash2 class="w-4 h-4" style="color:rgba(255,255,255,0.25);"/>
+                <Trash2 class="w-4 h-4" style="color:rgba(243,234,214,0.25);"/>
               </button>
             </div>
           </div>
@@ -90,13 +90,13 @@
 
       <!-- ═══ TAB: Аналитика ═══ -->
       <template v-if="activeTab === 'analytics'">
-        <div v-if="!store.breakdown.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(255,255,255,0.3);">
-          <div class="text-5xl mb-4">📊</div>
+        <div v-if="!store.breakdown.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(243,234,214,0.3);">
+          <BarChart3 class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
           <p class="font-medium">Нет данных за этот месяц</p>
         </div>
         <template v-else>
           <!-- Bar chart -->
-          <div class="rounded-2xl p-4 mb-4" style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+          <div class="rounded-2xl p-4 mb-4" style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
             <p class="text-sm font-medium mb-3">Расходы по категориям</p>
             <canvas ref="chartRef" height="160"/>
           </div>
@@ -104,15 +104,15 @@
           <div class="flex flex-col gap-2">
             <div v-for="item in store.breakdown" :key="item.category"
               class="flex items-center gap-3 px-4 py-3 rounded-xl"
-              style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+              style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
               <span class="text-lg flex-shrink-0">{{ catIcon(item.category) }}</span>
               <div class="flex-1 min-w-0">
                 <div class="flex justify-between mb-1">
                   <p class="text-sm font-medium">{{ item.category }}</p>
-                  <p class="text-sm font-semibold" style="color:#ef4444;">{{ fmt(item.amount) }}</p>
+                  <p class="text-sm font-semibold" style="color:#d6452b;">{{ fmt(item.amount) }}</p>
                 </div>
-                <div class="rounded-full overflow-hidden" style="background:rgba(255,255,255,0.08);height:4px;">
-                  <div class="h-full rounded-full" style="background:#6366f1;transition:width 0.3s;"
+                <div class="rounded-full overflow-hidden" style="background:rgba(243,234,214,0.10);height:4px;">
+                  <div class="h-full rounded-full" style="background:#e2532b;transition:width 0.3s;"
                     :style="{width: pct(item.amount) + '%'}"/>
                 </div>
               </div>
@@ -129,8 +129,8 @@
           </UiButton>
         </div>
 
-        <div v-if="!store.budgets.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(255,255,255,0.3);">
-          <div class="text-5xl mb-4">🎯</div>
+        <div v-if="!store.budgets.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(243,234,214,0.3);">
+          <Target class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
           <p class="font-medium mb-1">Нет бюджетов</p>
           <p class="text-sm">Установи лимиты расходов по категориям</p>
         </div>
@@ -138,24 +138,24 @@
         <div class="flex flex-col gap-3">
           <div v-for="b in store.budgets" :key="b.id"
             class="px-4 py-3 rounded-xl"
-            style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+            style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
                 <span class="text-base">{{ catIcon(b.category) }}</span>
                 <p class="text-sm font-medium">{{ b.category }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <p class="text-sm" :style="spentFor(b.category) > b.amount ? 'color:#ef4444;' : 'color:rgba(255,255,255,0.5);'">
+                <p class="text-sm" :style="spentFor(b.category) > b.amount ? 'color:#d6452b;' : 'color:rgba(168,153,124,0.82);'">
                   {{ fmt(spentFor(b.category)) }} / {{ fmt(b.amount) }}
                 </p>
-                <button @click="removeBudget(b.id)"><Trash2 class="w-3.5 h-3.5" style="color:rgba(255,255,255,0.25);"/></button>
+                <button @click="removeBudget(b.id)"><Trash2 class="w-3.5 h-3.5" style="color:rgba(243,234,214,0.25);"/></button>
               </div>
             </div>
-            <div class="rounded-full overflow-hidden" style="background:rgba(255,255,255,0.08);height:6px;">
+            <div class="rounded-full overflow-hidden" style="background:rgba(243,234,214,0.10);height:6px;">
               <div class="h-full rounded-full transition-all"
                 :style="{
                   width: Math.min(100, spentFor(b.category) / b.amount * 100) + '%',
-                  background: spentFor(b.category) > b.amount ? '#ef4444' : '#6366f1'
+                  background: spentFor(b.category) > b.amount ? '#d6452b' : '#e2532b'
                 }"/>
             </div>
           </div>
@@ -165,29 +165,29 @@
       <!-- ═══ TAB: Тренды ═══ -->
       <template v-if="activeTab === 'trends'">
         <div v-if="store.trendsLoading" class="flex justify-center py-8"><UiSpinner /></div>
-        <div v-else-if="!store.trends.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(255,255,255,0.3);">
-          <div class="text-5xl mb-4">📈</div>
+        <div v-else-if="!store.trends.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(243,234,214,0.3);">
+          <TrendingUp class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
           <p class="font-medium mb-1">Нет данных за последние месяцы</p>
           <p class="text-sm">Добавь транзакции, чтобы увидеть тренды</p>
         </div>
         <template v-else>
-          <p class="text-xs mb-3" style="color:rgba(255,255,255,0.4);">Последние {{ store.trends.length }} мес.</p>
-          <div class="rounded-2xl overflow-hidden" style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+          <p class="text-xs mb-3" style="color:rgba(168,153,124,0.62);">Последние {{ store.trends.length }} мес.</p>
+          <div class="rounded-2xl overflow-hidden" style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
             <!-- Header row -->
-            <div class="grid grid-cols-4 px-4 py-2 text-xs font-medium" style="color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.06);">
+            <div class="grid grid-cols-4 px-4 py-2 text-xs font-medium" style="color:rgba(168,153,124,0.62);border-bottom:1px solid rgba(243,234,214,0.06);">
               <span>Месяц</span>
-              <span class="text-right" style="color:#22c55e;">Доход</span>
-              <span class="text-right" style="color:#ef4444;">Расход</span>
+              <span class="text-right" style="color:#86a861;">Доход</span>
+              <span class="text-right" style="color:#d6452b;">Расход</span>
               <span class="text-right">Баланс</span>
             </div>
             <div v-for="(t, i) in store.trends" :key="t.month"
               class="grid grid-cols-4 px-4 py-3 text-sm"
-              :style="i < store.trends.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,0.04);' : ''">
+              :style="i < store.trends.length - 1 ? 'border-bottom:1px solid rgba(243,234,214,0.04);' : ''">
               <span class="font-medium">{{ t.month }}</span>
-              <span class="text-right" style="color:#22c55e;">+{{ fmt(t.income) }}</span>
-              <span class="text-right" style="color:#ef4444;">-{{ fmt(t.expense) }}</span>
-              <span class="text-right font-semibold" :style="t.balance >= 0 ? 'color:#6366f1;' : 'color:#ef4444;'">
-                {{ t.balance >= 0 ? '+' : '' }}{{ fmt(t.balance) }}
+              <span class="text-right" style="color:#86a861;">+{{ fmt(t.income) }}</span>
+              <span class="text-right" style="color:#d6452b;">-{{ fmt(t.expense) }}</span>
+              <span class="text-right font-semibold" :style="t.balance >= 0 ? 'color:#e2532b;' : 'color:#d6452b;'">
+                {{ t.balance >= 0 ? '+' : '-' }}{{ fmt(t.balance) }}
               </span>
             </div>
           </div>
@@ -196,28 +196,28 @@
 
       <!-- ═══ TAB: Рекуррентные ═══ -->
       <template v-if="activeTab === 'recurring'">
-        <div v-if="!store.recurringTransactions.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(255,255,255,0.3);">
-          <div class="text-5xl mb-4">🔁</div>
+        <div v-if="!store.recurringTransactions.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(243,234,214,0.3);">
+          <Repeat class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
           <p class="font-medium mb-1">Нет регулярных транзакций</p>
           <p class="text-sm">Отметь транзакцию как регулярную при создании</p>
         </div>
         <div v-else class="flex flex-col gap-2">
           <div v-for="tx in store.recurringTransactions" :key="tx.id"
             class="flex items-center gap-3 px-4 py-3 rounded-xl"
-            style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+            style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
             <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-base"
               :style="tx.type==='income' ? 'background:rgba(34,197,94,0.15);' : 'background:rgba(239,68,68,0.15);'">
               {{ catIcon(tx.category) }}
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ tx.category }}</p>
-              <p class="text-xs mt-0.5" style="color:rgba(255,255,255,0.4);">
+              <p class="text-xs mt-0.5" style="color:rgba(168,153,124,0.62);">
                 {{ intervalLabel(tx.recurringInterval) }}
                 <span v-if="tx.description"> · {{ tx.description }}</span>
               </p>
             </div>
             <p class="text-sm font-semibold flex-shrink-0"
-              :style="tx.type==='income' ? 'color:#22c55e;' : 'color:#ef4444;'">
+              :style="tx.type==='income' ? 'color:#86a861;' : 'color:#d6452b;'">
               {{ tx.type==='income' ? '+' : '-' }}{{ fmt(tx.amount) }}
             </p>
           </div>
@@ -232,8 +232,8 @@
           </UiButton>
         </div>
 
-        <div v-if="!store.goals.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(255,255,255,0.3);">
-          <div class="text-5xl mb-4">🏦</div>
+        <div v-if="!store.goals.length" class="flex-1 flex flex-col items-center justify-center text-center py-12" style="color:rgba(243,234,214,0.3);">
+          <PiggyBank class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
           <p class="font-medium mb-1">Нет целей накопления</p>
           <p class="text-sm">Создай цель и откладывай к ней</p>
         </div>
@@ -241,22 +241,22 @@
         <div class="flex flex-col gap-3">
           <div v-for="g in store.goals" :key="g.id"
             class="px-4 py-4 rounded-xl"
-            style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);">
+            style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
             <div class="flex items-start justify-between mb-3">
               <div>
                 <p class="text-sm font-semibold">{{ g.title }}</p>
-                <p v-if="g.deadline" class="text-xs mt-0.5" style="color:rgba(255,255,255,0.4);">
+                <p v-if="g.deadline" class="text-xs mt-0.5" style="color:rgba(168,153,124,0.62);">
                   до {{ formatDeadline(g.deadline) }}
                 </p>
               </div>
-              <button @click="removeGoal(g.id)"><Trash2 class="w-4 h-4" style="color:rgba(255,255,255,0.25);"/></button>
+              <button @click="removeGoal(g.id)"><Trash2 class="w-4 h-4" style="color:rgba(243,234,214,0.25);"/></button>
             </div>
             <div class="flex justify-between text-sm mb-2">
-              <span style="color:#22c55e;" class="font-semibold">{{ fmt(g.currentAmount) }}</span>
-              <span style="color:rgba(255,255,255,0.4);">из {{ fmt(g.targetAmount) }}</span>
+              <span style="color:#86a861;" class="font-semibold">{{ fmt(g.currentAmount) }}</span>
+              <span style="color:rgba(168,153,124,0.62);">из {{ fmt(g.targetAmount) }}</span>
             </div>
-            <div class="rounded-full overflow-hidden mb-3" style="background:rgba(255,255,255,0.08);height:8px;">
-              <div class="h-full rounded-full transition-all" style="background:linear-gradient(90deg,#6366f1,#22c55e);"
+            <div class="rounded-full overflow-hidden mb-3" style="background:rgba(243,234,214,0.10);height:8px;">
+              <div class="h-full rounded-full transition-all" style="background:linear-gradient(90deg,#e2532b,#86a861);"
                 :style="{width: Math.min(100, g.currentAmount / g.targetAmount * 100) + '%'}"/>
             </div>
             <UiButton variant="tonal" size="sm" class="w-full" @click="openContribute(g)">
@@ -272,12 +272,12 @@
     <UiDialog v-model="showAddTx" max-width="sm">
       <div class="p-6">
         <h3 class="text-lg font-semibold mb-4">Новая транзакция</h3>
-        <div class="flex rounded-xl overflow-hidden border mb-4" style="border-color:rgba(255,255,255,0.12);">
+        <div class="flex rounded-xl overflow-hidden border mb-4" style="border-color:rgba(243,234,214,0.12);">
           <button class="flex-1 py-2 text-sm font-medium transition-colors"
-            :style="txForm.type==='expense' ? 'background:#ef4444;color:#fff;' : 'background:transparent;color:rgba(255,255,255,0.5);'"
+            :style="txForm.type==='expense' ? 'background:#d6452b;color:#fff;' : 'background:transparent;color:rgba(168,153,124,0.82);'"
             @click="txForm.type='expense';txForm.category=''">Расход</button>
           <button class="flex-1 py-2 text-sm font-medium transition-colors"
-            :style="txForm.type==='income' ? 'background:#22c55e;color:#fff;' : 'background:transparent;color:rgba(255,255,255,0.5);'"
+            :style="txForm.type==='income' ? 'background:#86a861;color:#fff;' : 'background:transparent;color:rgba(168,153,124,0.82);'"
             @click="txForm.type='income';txForm.category=''">Доход</button>
         </div>
         <div class="flex flex-col gap-4">
@@ -285,9 +285,9 @@
           <UiSelect v-model="txForm.category" label="Категория" :options="txCategories"/>
           <UiInput v-model="txForm.description" label="Описание (необязательно)" placeholder="Комментарий..."/>
           <div>
-            <label class="text-sm block mb-1" style="color:rgba(255,255,255,0.5);">Дата</label>
+            <label class="text-sm block mb-1" style="color:rgba(168,153,124,0.82);">Дата</label>
             <input v-model="txForm.date" type="date" class="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style="background:#242424;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.87);"/>
+              style="background:#2b2118;border:1px solid rgba(243,234,214,0.10);color:rgba(243,234,214,0.92);"/>
           </div>
         </div>
         <div class="flex gap-2 justify-end mt-5">
@@ -320,9 +320,9 @@
           <UiInput v-model="goalForm.title" label="Название" placeholder="Ноутбук, Отпуск..."/>
           <UiInput v-model="goalForm.amountStr" label="Сумма цели (₽)" placeholder="100 000" type="number" :error="goalAmountError"/>
           <div>
-            <label class="text-sm block mb-1" style="color:rgba(255,255,255,0.5);">Дедлайн (необязательно)</label>
+            <label class="text-sm block mb-1" style="color:rgba(168,153,124,0.82);">Дедлайн (необязательно)</label>
             <input v-model="goalForm.deadline" type="date" class="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style="background:#242424;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.87);"/>
+              style="background:#2b2118;border:1px solid rgba(243,234,214,0.10);color:rgba(243,234,214,0.92);"/>
           </div>
         </div>
         <div class="flex gap-2 justify-end mt-5">
@@ -336,7 +336,7 @@
     <UiDialog v-model="showContribute" max-width="sm">
       <div class="p-6">
         <h3 class="text-lg font-semibold mb-1">Пополнить цель</h3>
-        <p class="text-sm mb-4" style="color:rgba(255,255,255,0.5);">{{ contributeGoal?.title }}</p>
+        <p class="text-sm mb-4" style="color:rgba(168,153,124,0.82);">{{ contributeGoal?.title }}</p>
         <UiInput v-model="contributeAmountStr" label="Сумма (₽)" placeholder="1 000" type="number" :error="contributeError"/>
         <div class="flex gap-2 justify-end mt-5">
           <UiButton variant="ghost" @click="showContribute=false">Отмена</UiButton>
@@ -350,7 +350,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import { ChevronLeft, ChevronRight, Plus, Trash2, PiggyBank } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Plus, Trash2, PiggyBank, Wallet, BarChart3, Target, TrendingUp, Repeat } from 'lucide-vue-next';
 import { Chart, registerables } from 'chart.js';
 import { useFinanceStore } from '../stores/finance.store';
 import { useNotify } from '../composables/useNotify';
@@ -420,7 +420,7 @@ function buildChart() {
     type: 'bar',
     data: {
       labels: store.breakdown.map((b) => `${catIcon(b.category)} ${b.category}`),
-      datasets: [{ data: store.breakdown.map((b) => b.amount), backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 6 }],
+      datasets: [{ data: store.breakdown.map((b) => b.amount), backgroundColor: 'rgba(226,83,43,0.7)', borderRadius: 6 }],
     },
     options: {
       indexAxis: 'y',

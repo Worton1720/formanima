@@ -25,9 +25,9 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      // Привычки объединены с целями (type='habit'); деталь — общая страница цели.
       path: '/habits/:id',
-      component: () => import('../pages/HabitDetailPage.vue'),
-      meta: { requiresAuth: true },
+      redirect: (to) => ({ path: `/goals/${to.params.id}` }),
     },
     {
       path: '/profile',
@@ -53,6 +53,12 @@ const router = createRouter({
       path: '/goals',
       name: 'Goals',
       component: () => import('../pages/GoalsPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/goals/archive',
+      name: 'GoalsArchive',
+      component: () => import('../pages/ArchivePage.vue'),
       meta: { requiresAuth: true },
     },
     {

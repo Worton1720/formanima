@@ -14,11 +14,11 @@
         />
       </div>
       <div class="flex items-center gap-1 mt-2">
-        <span class="text-[11px]" style="color: rgba(255,255,255,0.4);">Меньше</span>
+        <span class="text-[11px]" style="color: rgba(168,153,124,0.62);">Меньше</span>
         <div class="heatmap-cell" style="background: rgba(128,128,128,0.18);" />
         <div class="heatmap-cell" :style="{ background: color, opacity: '0.4' }" />
         <div class="heatmap-cell" :style="{ background: color }" />
-        <span class="text-[11px]" style="color: rgba(255,255,255,0.4);">Больше</span>
+        <span class="text-[11px]" style="color: rgba(168,153,124,0.62);">Больше</span>
       </div>
     </div>
   </div>
@@ -33,7 +33,7 @@ import type { HeatmapEntry } from '../../types';
 const props = defineProps<{ habitId: string; color?: string }>();
 const loading = ref(true);
 const entries = ref<HeatmapEntry[]>([]);
-const color = props.color ?? '#6366f1';
+const color = props.color ?? '#e2532b';
 
 onMounted(async () => {
   try {

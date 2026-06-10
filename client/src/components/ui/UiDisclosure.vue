@@ -6,7 +6,7 @@
       <slot name="button" :open="open" />
       <ChevronDown
         :class="['w-4 h-4 transition-transform flex-shrink-0 ml-2', open ? 'rotate-180' : '']"
-        style="color: rgba(255,255,255,0.5);"
+        style="color: rgba(168,153,124,0.82);"
       />
     </DisclosureButton>
     <DisclosurePanel class="px-4 pb-4">

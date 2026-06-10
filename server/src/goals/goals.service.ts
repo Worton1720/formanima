@@ -34,14 +34,13 @@ export class GoalsService {
   }
 
   async findOne(userId: string, goalId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { start, end } = this.todayUtcRange();
 
     const goal = await this.prisma.goal.findUnique({
       where: { id: goalId },
       include: {
         milestones: { orderBy: { order: 'asc' } },
-        progresses: { where: { date: today } },
+        progresses: { where: { date: { gte: start, lte: end } } },
       },
     });
     if (!goal) throw new NotFoundException('Goal not found');
@@ -50,8 +49,7 @@ export class GoalsService {
   }
 
   async findToday(userId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { start, end } = this.todayUtcRange();
 
     const goals = await this.prisma.goal.findMany({
       where: { userId, status: 'active' },
@@ -60,7 +58,7 @@ export class GoalsService {
     });
 
     const progresses = await this.prisma.goalProgress.findMany({
-      where: { userId, date: today },
+      where: { userId, date: { gte: start, lte: end } },
     });
 
     return { goals, progresses };
@@ -278,6 +276,18 @@ export class GoalsService {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+  // GoalProgress.date — это @db.Date (хранится как UTC-полночь). Прогресс создаётся
+  // через new Date('YYYY-MM-DD') = UTC-полночь, поэтому «сегодня» нужно считать в UTC,
+  // а не через setHours (локальная полночь даёт промах на сутки в TZ != UTC). Совпадает
+  // с подходом StatsService (toISOString().split('T')[0]).
+  private todayUtcRange(): { start: Date; end: Date } {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return {
+      start: new Date(todayStr + 'T00:00:00.000Z'),
+      end: new Date(todayStr + 'T23:59:59.999Z'),
+    };
+  }
 
   private async updateGoalCurrentValue(goalId: string): Promise<void> {
     const result = await this.prisma.goalProgress.aggregate({

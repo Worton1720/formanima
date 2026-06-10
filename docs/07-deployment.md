@@ -42,14 +42,14 @@ formanima/
 Из каталога `formanima/`:
 
 ```bash
-docker-compose up -d db
+docker compose up -d db
 ```
 
 PostgreSQL 16 (alpine) поднимется на порту `5433`, данные хранятся в именованном томе `pgdata`. Остановка и удаление:
 
 ```bash
-docker-compose down        # остановить
-docker-compose down -v     # остановить и удалить данные (том pgdata)
+docker compose down        # остановить
+docker compose down -v     # остановить и удалить данные (том pgdata)
 ```
 
 При использовании внешней СУБД пропустите этот шаг и укажите свою строку подключения в `DATABASE_URL`.
@@ -146,7 +146,7 @@ openssl rand -hex 32
 
 | Симптом | Причина и решение |
 |---------|-------------------|
-| `Can't reach database server` | Не поднята БД — выполните `docker-compose up -d db`, проверьте `DATABASE_URL` и порт `5433` |
+| `Can't reach database server` | Не поднята БД — выполните `docker compose up -d db`, проверьте `DATABASE_URL` и порт `5433` |
 | CORS-ошибка в браузере | Адрес клиента не совпадает с разрешённым в `main.ts` — обновите `enableCors` |
 | 401 на защищённых эндпоинтах | Отсутствует/просрочен токен — повторите вход; проверьте JWT-секреты |
 | Ошибки миграций Prisma | Выполните `npx prisma migrate dev` (dev) или `migrate deploy` (prod) после правок схемы |

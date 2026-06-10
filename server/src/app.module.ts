@@ -7,9 +7,8 @@ import { AdminModule } from './admin/admin.module';
 import { FinanceModule } from './finance/finance.module';
 import { GoalsModule } from './goals/goals.module';
 import { CaloriesModule } from './calories/calories.module';
-import { HabitsModule } from './habits/habits.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, StatsModule, GamificationModule, AdminModule, FinanceModule, GoalsModule, CaloriesModule, HabitsModule],
+  imports: [PrismaModule, AuthModule, StatsModule, GamificationModule, AdminModule, FinanceModule, GoalsModule, CaloriesModule],
 })
 export class AppModule {}

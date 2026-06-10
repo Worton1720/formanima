@@ -11,21 +11,21 @@
       <div class="flex items-start gap-3 mb-6">
         <div
           class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
-          :style="{ background: hexToAlpha(store.currentGoal.color || '#6366f1', 0.2) }"
+          :style="{ background: hexToAlpha(store.currentGoal.color || '#e2532b', 0.2) }"
         >
-          {{ store.currentGoal.icon || '🎯' }}
+          <GoalIcon :icon="store.currentGoal.icon" :color="store.currentGoal.color" class="w-6 h-6" />
         </div>
         <div class="flex-1 min-w-0">
           <h1 class="text-xl font-bold">{{ store.currentGoal.title }}</h1>
-          <p v-if="store.currentGoal.description" class="text-sm mt-0.5" style="color: rgba(255,255,255,0.5);">
+          <p v-if="store.currentGoal.description" class="text-sm mt-0.5" style="color: rgba(168,153,124,0.82);">
             {{ store.currentGoal.description }}
           </p>
         </div>
         <div class="flex items-center gap-1 flex-shrink-0">
-          <button class="p-2 rounded-lg" style="color: rgba(255,255,255,0.4);" @click="showEditDialog = true">
+          <button class="p-2 rounded-lg" style="color: rgba(168,153,124,0.62);" @click="showEditDialog = true">
             <Pencil class="w-4 h-4" />
           </button>
-          <button class="p-2 rounded-lg" style="color: rgba(255,255,255,0.3);" @click="confirmDelete">
+          <button class="p-2 rounded-lg" style="color: rgba(243,234,214,0.3);" @click="confirmDelete">
             <Trash2 class="w-4 h-4" />
           </button>
         </div>
@@ -33,20 +33,20 @@
 
       <!-- Progress -->
       <template v-if="store.currentGoal.targetValue && store.currentGoal.targetValue > 0">
-        <div class="px-4 py-4 rounded-xl mb-4" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="px-4 py-4 rounded-xl mb-4" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <div class="flex justify-between text-sm mb-2">
-            <span style="color: rgba(255,255,255,0.7);">Прогресс</span>
-            <span class="font-semibold" :style="{ color: store.currentGoal.color || '#6366f1' }">
+            <span style="color: rgba(168,153,124,0.95);">Прогресс</span>
+            <span class="font-semibold" :style="{ color: store.currentGoal.color || '#e2532b' }">
               {{ progressPercent }}%
             </span>
           </div>
           <UiProgress
             :model-value="progressPercent"
-            :color="store.currentGoal.color || '#6366f1'"
+            :color="store.currentGoal.color || '#e2532b'"
             height="md"
             class="mb-2"
           />
-          <div class="flex justify-between text-xs" style="color: rgba(255,255,255,0.4);">
+          <div class="flex justify-between text-xs" style="color: rgba(168,153,124,0.62);">
             <span>{{ store.currentGoal.currentValue }}</span>
             <span>{{ store.currentGoal.targetValue }}</span>
           </div>
@@ -56,7 +56,7 @@
       <!-- Mark progress today button -->
       <UiButton
         class="w-full mb-4"
-        :variant="markedToday ? 'ghost' : 'default'"
+        :variant="markedToday ? 'ghost' : 'primary'"
         :loading="markingProgress"
         @click="toggleTodayMark"
       >
@@ -66,7 +66,7 @@
       </UiButton>
 
       <!-- Milestones -->
-      <div class="px-4 py-4 rounded-xl mb-4" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+      <div class="px-4 py-4 rounded-xl mb-4" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-sm font-semibold">Шаги к цели</h2>
           <UiButton variant="ghost" size="sm" @click="showMilestoneDialog = true">
@@ -74,29 +74,29 @@
           </UiButton>
         </div>
 
-        <div v-if="!milestones.length" class="text-center py-4" style="color: rgba(255,255,255,0.3);">
+        <div v-if="!milestones.length" class="text-center py-4" style="color: rgba(243,234,214,0.3);">
           <p class="text-sm">Нет шагов. Добавь промежуточные цели.</p>
         </div>
 
-        <div v-for="ms in milestones" :key="ms.id" class="flex items-center gap-3 py-2.5 border-b" style="border-color: rgba(255,255,255,0.06);">
+        <div v-for="ms in milestones" :key="ms.id" class="flex items-center gap-3 py-2.5 border-b" style="border-color: rgba(243,234,214,0.06);">
           <button
             class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border"
-            :style="ms.isDone ? 'background: #6366f1; border-color: #6366f1;' : 'background: transparent; border-color: rgba(255,255,255,0.2);'"
+            :style="ms.isDone ? 'background: #e2532b; border-color: #e2532b;' : 'background: transparent; border-color: rgba(243,234,214,0.18);'"
             @click="toggleMilestone(ms)"
           >
             <Check v-if="ms.isDone" class="w-3 h-3 text-white" />
           </button>
-          <span class="flex-1 text-sm" :style="ms.isDone ? 'text-decoration: line-through; color: rgba(255,255,255,0.4);' : ''">
+          <span class="flex-1 text-sm" :style="ms.isDone ? 'text-decoration: line-through; color: rgba(168,153,124,0.62);' : ''">
             {{ ms.title }}
           </span>
-          <button class="p-1" style="color: rgba(255,255,255,0.25);" @click="deleteMilestone(ms.id)">
+          <button class="p-1" style="color: rgba(243,234,214,0.25);" @click="deleteMilestone(ms.id)">
             <Trash2 class="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       <!-- Progress History (last 7 days) -->
-      <div class="px-4 py-4 rounded-xl" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+      <div class="px-4 py-4 rounded-xl" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
         <h2 class="text-sm font-semibold mb-3">История прогресса (7 дней)</h2>
         <div class="flex gap-2">
           <div
@@ -107,21 +107,21 @@
             <div
               class="w-full h-8 rounded-lg flex items-center justify-center"
               :style="day.done
-                ? `background: ${store.currentGoal.color || '#6366f1'}33; border: 1px solid ${store.currentGoal.color || '#6366f1'}66;`
-                : 'background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);'"
+                ? `background: ${store.currentGoal.color || '#e2532b'}33; border: 1px solid ${store.currentGoal.color || '#e2532b'}66;`
+                : 'background: rgba(243,234,214,0.04); border: 1px solid rgba(243,234,214,0.10);'"
             >
-              <CheckCircle v-if="day.done" class="w-4 h-4" :style="{ color: store.currentGoal.color || '#6366f1' }" />
+              <CheckCircle v-if="day.done" class="w-4 h-4" :style="{ color: store.currentGoal.color || '#e2532b' }" />
             </div>
-            <p class="text-xs" style="color: rgba(255,255,255,0.3);">{{ day.label }}</p>
+            <p class="text-xs" style="color: rgba(243,234,214,0.3);">{{ day.label }}</p>
           </div>
         </div>
       </div>
     </template>
 
     <template v-else>
-      <div class="text-center py-12" style="color: rgba(255,255,255,0.4);">
+      <div class="text-center py-12" style="color: rgba(168,153,124,0.62);">
         <p>Цель не найдена</p>
-        <router-link to="/goals" class="text-sm mt-2 block" style="color: #6366f1;">← Вернуться к целям</router-link>
+        <router-link to="/goals" class="text-sm mt-2 block" style="color: #e2532b;">← Вернуться к целям</router-link>
       </div>
     </template>
 
@@ -135,12 +135,12 @@
           <UiSelect v-model="editForm.type" label="Тип" :options="GOAL_TYPES" />
           <UiInput v-model="editForm.targetValueStr" label="Целевое значение" type="number" />
           <div>
-            <label class="text-sm block mb-1" style="color: rgba(255,255,255,0.5);">Дедлайн</label>
+            <label class="text-sm block mb-1" style="color: rgba(168,153,124,0.82);">Дедлайн</label>
             <input
               v-model="editForm.deadline"
               type="date"
               class="w-full rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
+              style="background: #2b2118; border: 1px solid rgba(243,234,214,0.10); color: rgba(243,234,214,0.92);"
             />
           </div>
         </div>
@@ -177,6 +177,7 @@ import { useGoalsStore } from '../stores/goals.store';
 import { goalsApi } from '../api/goals.api';
 import { useNotify } from '../composables/useNotify';
 import { UiButton, UiDialog, UiInput, UiTextarea, UiSelect, UiSpinner, UiProgress } from '../components/ui';
+import GoalIcon from '../components/common/GoalIcon.vue';
 import type { Milestone } from '../types';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
@@ -217,7 +218,7 @@ const last7Days = computed(() => {
 
 function hexToAlpha(hex: string, alpha: number) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return `rgba(99,102,241,${alpha})`;
+  if (!result) return `rgba(226,83,43,${alpha})`;
   const r = parseInt(result[1], 16);
   const g = parseInt(result[2], 16);
   const b = parseInt(result[3], 16);

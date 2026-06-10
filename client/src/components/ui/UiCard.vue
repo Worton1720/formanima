@@ -20,8 +20,8 @@ defineProps<{
 }>();
 
 const variantClasses: Record<string, string> = {
-  elevated: 'bg-surface shadow-lg',
-  tonal: 'bg-surface-variant',
+  elevated: 'forge-card',
+  tonal: 'bg-surface-variant border border-border',
   outlined: 'bg-surface border border-border',
 };
 </script>

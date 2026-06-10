@@ -1,18 +1,18 @@
 <template>
   <div class="flex flex-col gap-1">
-    <label v-if="label" class="text-sm" style="color: rgba(255,255,255,0.5);">{{ label }}</label>
+    <label v-if="label" class="text-sm" style="color: rgba(168,153,124,0.82);">{{ label }}</label>
     <Listbox :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)">
       <div class="relative">
         <ListboxButton
           class="w-full flex items-center justify-between rounded-xl px-3 py-2 text-sm focus:outline-none"
-          style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
+          style="background: #2b2118; border: 1px solid rgba(243,234,214,0.10); color: rgba(243,234,214,0.92);"
         >
           <span>{{ selectedLabel }}</span>
-          <ChevronDown class="w-4 h-4" style="color: rgba(255,255,255,0.5);" />
+          <ChevronDown class="w-4 h-4" style="color: rgba(168,153,124,0.82);" />
         </ListboxButton>
         <ListboxOptions
           class="absolute z-50 mt-1 w-full rounded-xl overflow-hidden shadow-xl focus:outline-none"
-          style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);"
+          style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);"
         >
           <ListboxOption
             v-for="opt in options"
@@ -22,7 +22,7 @@
           >
             <div
               :class="['px-3 py-2 text-sm cursor-pointer', active ? 'bg-white/8' : '']"
-              :style="selected ? 'color: #6366f1;' : 'color: rgba(255,255,255,0.87);'"
+              :style="selected ? 'color: #e2532b;' : 'color: rgba(243,234,214,0.92);'"
             >
               {{ opt.label }}
             </div>

@@ -13,11 +13,11 @@ defineProps<{
 }>();
 
 const colorClasses: Record<string, string> = {
-  default: 'bg-white/10 text-white/60',
-  primary: 'bg-primary/15 text-primary',
-  success: 'bg-success/15 text-success',
-  warning: 'bg-warning/15 text-warning',
-  error: 'bg-error/15 text-error',
-  orange: 'bg-orange/15 text-orange',
+  default: 'bg-gold/10 text-text-muted border border-border',
+  primary: 'bg-primary/15 text-primary border border-primary/20',
+  success: 'bg-success/15 text-success border border-success/20',
+  warning: 'bg-warning/15 text-warning border border-warning/20',
+  error: 'bg-error/15 text-error border border-error/20',
+  orange: 'bg-orange/15 text-orange border border-orange/20',
 };
 </script>

@@ -28,7 +28,7 @@ formanima/
 ### 1. База данных
 
 ```bash
-docker-compose up -d db
+docker compose up -d db
 ```
 
 PostgreSQL поднимается на порту `5433`, БД `formanima`, пользователь `formanima`, пароль `secret`. Сервер и клиент запускаются через npm (в `docker-compose.yml` определён только сервис `db`).

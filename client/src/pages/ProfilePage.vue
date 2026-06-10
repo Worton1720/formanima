@@ -4,7 +4,7 @@
 
     <GamificationHero />
 
-    <div class="rounded-2xl overflow-hidden" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+    <div class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
       <div class="p-6">
         <div v-if="loading" class="flex justify-center py-4">
           <UiSpinner />
@@ -53,21 +53,21 @@
             />
           </div>
 
-          <div class="border-t mb-4" style="border-color: rgba(255,255,255,0.08);" />
+          <div class="border-t mb-4" style="border-color: rgba(243,234,214,0.10);" />
           <p class="text-sm font-medium mb-4">Настройки</p>
 
           <!-- Язык -->
           <div class="flex items-center gap-3">
-            <Languages class="w-5 h-5 flex-shrink-0" style="color: rgba(255,255,255,0.4);" />
-            <span class="text-sm flex-1" style="color: rgba(255,255,255,0.7);">Язык интерфейса</span>
-            <div class="flex rounded-xl overflow-hidden border" style="border-color: rgba(255,255,255,0.12);">
+            <Languages class="w-5 h-5 flex-shrink-0" style="color: rgba(168,153,124,0.62);" />
+            <span class="text-sm flex-1" style="color: rgba(168,153,124,0.95);">Язык интерфейса</span>
+            <div class="flex rounded-xl overflow-hidden border" style="border-color: rgba(243,234,214,0.12);">
               <button
                 v-for="lang in ['ru', 'en']"
                 :key="lang"
                 class="px-3 py-1 text-xs transition-colors"
                 :style="language === lang
-                  ? 'background: #6366f1; color: #fff;'
-                  : 'background: transparent; color: rgba(255,255,255,0.5);'"
+                  ? 'background: #e2532b; color: #fff;'
+                  : 'background: transparent; color: rgba(168,153,124,0.82);'"
                 @click="setLanguage(lang as 'ru' | 'en')"
               >{{ lang.toUpperCase() }}</button>
             </div>
@@ -75,22 +75,22 @@
         </template>
       </div>
 
-      <div class="border-t px-6 py-3" style="border-color: rgba(255,255,255,0.08);">
+      <div class="border-t px-6 py-3" style="border-color: rgba(243,234,214,0.10);">
         <router-link
           to="/achievements"
           class="flex items-center gap-3 py-2"
-          style="color: rgba(255,255,255,0.7);"
+          style="color: rgba(168,153,124,0.95);"
         >
-          <Trophy class="w-5 h-5 flex-shrink-0" style="color: #f59e0b;" />
+          <Trophy class="w-5 h-5 flex-shrink-0" style="color: #e0aa4e;" />
           <span class="text-sm flex-1">Достижения</span>
-          <ChevronRight class="w-4 h-4" style="color: rgba(255,255,255,0.3);" />
+          <ChevronRight class="w-4 h-4" style="color: rgba(243,234,214,0.3);" />
         </router-link>
       </div>
 
-      <div class="border-t px-6 py-4 flex items-center gap-2" style="border-color: rgba(255,255,255,0.08);">
+      <div class="border-t px-6 py-4 flex items-center gap-2" style="border-color: rgba(243,234,214,0.10);">
         <UiButton variant="ghost" @click="logout">
-          <LogOut class="w-4 h-4 mr-1" style="color: #ef4444;" />
-          <span style="color: #ef4444;">Выйти</span>
+          <LogOut class="w-4 h-4 mr-1" style="color: #d6452b;" />
+          <span style="color: #d6452b;">Выйти</span>
         </UiButton>
         <div class="flex-1" />
         <template v-if="!editMode">

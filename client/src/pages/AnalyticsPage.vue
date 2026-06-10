@@ -2,14 +2,14 @@
   <div class="max-w-2xl mx-auto px-4 py-6 min-h-[calc(100vh-3.5rem)] flex flex-col">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">Аналитика</h1>
-      <div class="flex rounded-xl overflow-hidden border" style="border-color: rgba(255,255,255,0.12);">
+      <div class="flex rounded-xl overflow-hidden border" style="border-color: rgba(243,234,214,0.12);">
         <button
           v-for="p in [7, 30]"
           :key="p"
           class="px-3 py-1.5 text-sm transition-colors"
           :style="period === p
-            ? 'background: #6366f1; color: #fff;'
-            : 'background: transparent; color: rgba(255,255,255,0.5);'"
+            ? 'background: #e2532b; color: #fff;'
+            : 'background: transparent; color: rgba(168,153,124,0.82);'"
           @click="period = p; load()"
         >{{ p }} дней</button>
       </div>
@@ -21,8 +21,8 @@
 
     <template v-else>
       <!-- Empty state -->
-      <div v-if="!overview.length" class="flex-1 flex flex-col items-center justify-center text-center py-8" style="color: rgba(255,255,255,0.3);">
-        <div class="text-5xl mb-4">📊</div>
+      <div v-if="!overview.length" class="flex-1 flex flex-col items-center justify-center text-center py-8" style="color: rgba(243,234,214,0.3);">
+        <BarChart3 class="w-12 h-12 mb-4" style="color: rgba(243,234,214,0.18);" />
         <p class="text-lg font-medium mb-1">Нет данных</p>
         <p class="text-sm">Начни выполнять привычки, чтобы видеть статистику</p>
       </div>
@@ -30,49 +30,49 @@
       <template v-else>
         <!-- KPI карточки -->
         <div class="grid grid-cols-3 gap-3 mb-6">
-          <div class="rounded-xl p-3 text-center" style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);">
-            <p class="text-2xl font-bold" style="color: #6366f1;">{{ avgCompletion }}%</p>
-            <p class="text-xs mt-1" style="color: rgba(255,255,255,0.5);">выполнений</p>
+          <div class="rounded-xl p-3 text-center" style="background: rgba(226,83,43,0.1); border: 1px solid rgba(226,83,43,0.2);">
+            <p class="text-2xl font-bold" style="color: #e2532b;">{{ avgCompletion }}%</p>
+            <p class="text-xs mt-1" style="color: rgba(168,153,124,0.82);">выполнений</p>
           </div>
           <div class="rounded-xl p-3 text-center" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);">
-            <p class="text-2xl font-bold" style="color: #f59e0b;">{{ maxStreak }}</p>
-            <p class="text-xs mt-1" style="color: rgba(255,255,255,0.5);">streak дней 🔥</p>
+            <p class="text-2xl font-bold" style="color: #e0aa4e;">{{ maxStreak }}</p>
+            <p class="text-xs mt-1" style="color: rgba(168,153,124,0.82);">streak {{ plural(maxStreak, 'день', 'дня', 'дней') }} 🔥</p>
           </div>
           <div class="rounded-xl p-3 text-center" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
-            <p class="text-2xl font-bold" style="color: #22c55e;">{{ perfectDays }}</p>
-            <p class="text-xs mt-1" style="color: rgba(255,255,255,0.5);">идеал. дней</p>
+            <p class="text-2xl font-bold" style="color: #86a861;">{{ perfectDays }}</p>
+            <p class="text-xs mt-1" style="color: rgba(168,153,124,0.82);">идеал. дней</p>
           </div>
         </div>
 
         <!-- Line chart -->
-        <div class="rounded-2xl p-4 mb-4" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="rounded-2xl p-4 mb-4" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <p class="text-sm font-medium mb-3">Выполнения по дням</p>
           <canvas ref="lineChartRef" height="120" />
         </div>
 
         <!-- Bar chart -->
-        <div v-if="overview.length" class="rounded-2xl p-4 mb-4" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+        <div v-if="overview.length" class="rounded-2xl p-4 mb-4" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <p class="text-sm font-medium mb-3">% выполнения по привычкам</p>
           <canvas ref="barChartRef" height="120" />
         </div>
 
         <!-- Streak table -->
-        <div v-if="streakRows.length" class="rounded-2xl mb-4 overflow-hidden" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+        <div v-if="streakRows.length" class="rounded-2xl mb-4 overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <p class="text-sm font-medium px-4 pt-4 pb-2">Streak по привычкам</p>
           <table class="w-full text-sm">
             <thead>
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
-                <th class="px-4 py-2 text-left text-xs font-medium" style="color: rgba(255,255,255,0.4);">Привычка</th>
-                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(255,255,255,0.4);">Текущий</th>
-                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(255,255,255,0.4);">Лучший</th>
-                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(255,255,255,0.4);">% за период</th>
+              <tr style="border-bottom: 1px solid rgba(243,234,214,0.10);">
+                <th class="px-4 py-2 text-left text-xs font-medium" style="color: rgba(168,153,124,0.62);">Привычка</th>
+                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(168,153,124,0.62);">Текущий</th>
+                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(168,153,124,0.62);">Лучший</th>
+                <th class="px-4 py-2 text-center text-xs font-medium" style="color: rgba(168,153,124,0.62);">% за период</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="row in streakRows"
                 :key="row.habitId"
-                style="border-bottom: 1px solid rgba(255,255,255,0.05);"
+                style="border-bottom: 1px solid rgba(243,234,214,0.05);"
               >
                 <td class="px-4 py-2">
                   <div class="flex items-center gap-2">
@@ -81,23 +81,23 @@
                   </div>
                 </td>
                 <td class="px-4 py-2 text-center">
-                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(99,102,241,0.15); color: #6366f1;">
-                    {{ row.current }} дн.
+                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(226,83,43,0.15); color: #e2532b;">
+                    {{ pluralDays(row.current) }}
                   </span>
                 </td>
                 <td class="px-4 py-2 text-center">
-                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6);">
-                    {{ row.best }} дн.
+                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(243,234,214,0.10); color: rgba(168,153,124,0.92);">
+                    {{ pluralDays(row.best) }}
                   </span>
                 </td>
-                <td class="px-4 py-2 text-center" style="color: rgba(255,255,255,0.7);">{{ row.completionRate }}%</td>
+                <td class="px-4 py-2 text-center" style="color: rgba(168,153,124,0.95);">{{ row.completionRate }}%</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- Heatmap аккордеоны -->
-        <div v-if="habitsWithActions.length" class="rounded-2xl overflow-hidden" style="background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);">
+        <div v-if="habitsWithActions.length" class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <p class="text-sm font-medium px-4 pt-4 pb-2">История выполнений</p>
           <UiDisclosure
             v-for="(habit, idx) in habitsWithActions"
@@ -111,7 +111,7 @@
                 <span
                   v-if="streakMap[habit.id] >= 2"
                   class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs flex-shrink-0"
-                  style="background: rgba(249,115,22,0.15); color: #fb923c;"
+                  style="background: rgba(226,83,43,0.15); color: #fb923c;"
                 >
                   <Flame class="w-3 h-3" />{{ streakMap[habit.id] }}
                 </span>
@@ -130,17 +130,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { Chart, registerables } from 'chart.js';
-import { Flame } from 'lucide-vue-next';
+import { Flame, BarChart3 } from 'lucide-vue-next';
 import { statsApi } from '../api/stats.api';
-import { useHabitsStore } from '../stores/habits.store';
+import { useGoalsStore } from '../stores/goals.store';
 import { getIcon } from '../utils/iconMap';
+import { plural, pluralDays } from '../utils/plural';
 import { UiSpinner, UiDisclosure } from '../components/ui';
 import HeatmapCalendar from '../components/stats/HeatmapCalendar.vue';
 import type { HabitOverview, DailyStats, StreakStats } from '../types';
 
 Chart.register(...registerables);
 
-const habitsStore = useHabitsStore();
+const goalsStore = useGoalsStore();
 const loading = ref(true);
 const period = ref(30);
 const streakMap = ref<Record<string, number>>({});
@@ -154,9 +155,8 @@ const barChartRef = ref<HTMLCanvasElement | null>(null);
 let lineChart: Chart | null = null;
 let barChart: Chart | null = null;
 
-const habitsWithActions = computed(() =>
-  habitsStore.habits.filter((h) => h.actions && h.actions.length > 0),
-);
+// Привычки = цели типа 'habit'.
+const habitsWithActions = computed(() => goalsStore.habitGoals);
 
 const avgCompletion = computed(() => {
   if (!overview.value.length) return 0;
@@ -192,8 +192,8 @@ function buildLineChart() {
         {
           label: 'Выполнений',
           data: dailyStats.value.map((d) => d.completedCount),
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99,102,241,0.12)',
+          borderColor: '#e2532b',
+          backgroundColor: 'rgba(226,83,43,0.12)',
           tension: 0.4,
           fill: true,
           pointRadius: 3,
@@ -221,7 +221,7 @@ function buildBarChart() {
         {
           label: '% выполнения',
           data: overview.value.map((h) => h.completionRate),
-          backgroundColor: 'rgba(99,102,241,0.7)',
+          backgroundColor: 'rgba(226,83,43,0.7)',
           borderRadius: 6,
         },
       ],
@@ -240,8 +240,8 @@ async function load() {
   loading.value = true;
   destroyCharts();
   try {
-    await habitsStore.fetchAll();
-    const habits = habitsStore.habits;
+    await goalsStore.fetchGoals();
+    const habits = goalsStore.habitGoals;
 
     [overview.value, dailyStats.value] = await Promise.all([
       statsApi.getOverview(period.value),

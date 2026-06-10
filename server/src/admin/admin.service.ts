@@ -24,7 +24,7 @@ export class AdminService {
       name: u.name,
       role: u.role,
       createdAt: u.createdAt,
-      goalsCount: u._count.goals,
+      habitsCount: u._count.goals,
       strikesCount: u.rank?.totalStrikes ?? 0,
     }));
   }
@@ -63,7 +63,7 @@ export class AdminService {
 
     return {
       totalUsers,
-      totalGoals,
+      totalHabits: totalGoals,
       totalCompletions: totalStrikes,
       activeToday: activeTodayGroups.length,
     };

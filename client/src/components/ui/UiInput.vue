@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col gap-1">
-    <label v-if="label" class="text-sm" style="color: rgba(255,255,255,0.5);">{{ label }}</label>
+    <label v-if="label" class="text-xs font-medium uppercase tracking-wider" style="color: rgba(168,153,124,0.82);">{{ label }}</label>
     <div class="relative">
       <component
         :is="prependIcon"
         v-if="prependIcon"
         class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-        style="color: rgba(255,255,255,0.5);"
+        style="color: rgba(168,153,124,0.82);"
       />
       <input
         v-bind="$attrs"
@@ -21,10 +21,10 @@
           prependIcon ? 'pl-9' : '',
           disabled ? 'opacity-50 cursor-not-allowed' : '',
         ]"
-        style="background: #242424; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.87);"
+        style="background: #1c160f; border: 1px solid rgba(243,234,214,0.10); color: rgba(243,234,214,0.92);"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-        @focus="($event.target as HTMLInputElement).style.borderColor = '#6366f1'"
-        @blur="($event.target as HTMLInputElement).style.borderColor = error ? '#ef4444' : 'rgba(255,255,255,0.08)'"
+        @focus="($event.target as HTMLInputElement).style.borderColor = '#e0aa4e'; ($event.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(224,170,78,0.14)'"
+        @blur="($event.target as HTMLInputElement).style.borderColor = error ? '#d6452b' : 'rgba(243,234,214,0.10)'; ($event.target as HTMLInputElement).style.boxShadow = 'none'"
       />
     </div>
     <p v-if="error" class="text-xs text-error">{{ error }}</p>

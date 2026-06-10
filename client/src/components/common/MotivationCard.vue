@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl p-4 flex items-start gap-3 mb-4" style="background: #242424; border: 1px solid rgba(255,255,255,0.08);">
-    <Hammer class="w-7 h-7 flex-shrink-0" style="color: #6366f1;" />
-    <p class="text-sm font-medium italic flex-1 m-0" style="color: rgba(255,255,255,0.7);">
+  <div class="rounded-xl p-4 flex items-start gap-3 mb-4" style="background: #2b2118; border: 1px solid rgba(243,234,214,0.10);">
+    <Hammer class="w-7 h-7 flex-shrink-0" style="color: #e2532b;" />
+    <p class="text-sm font-medium italic flex-1 m-0" style="color: rgba(168,153,124,0.95);">
       "{{ quote }}"
     </p>
   </div>
