@@ -28,7 +28,7 @@ COPY --from=build /app/prisma.config.ts ./
 
 EXPOSE 3000
 
-# Перед стартом применяем миграции к БД.
-# Точка входа — dist/src/main.js: nest build кладёт вывод в dist/src,
-# т.к. в компиляцию попадают prisma.config.ts и scripts/ вне каталога src.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+# Перед стартом применяем миграции и засеваем демо-данные (идемпотентно),
+# затем запускаем сервер. Точка входа — dist/src/main.js: nest build кладёт
+# вывод в dist/src, т.к. в компиляцию попадают prisma.config.ts и scripts/.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/seed; node dist/src/main"]
