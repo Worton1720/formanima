@@ -33,10 +33,10 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex rounded-xl overflow-hidden border mb-5" style="border-color:rgba(243,234,214,0.10);">
+    <div class="flex overflow-x-auto rounded-xl border mb-5" style="border-color:rgba(243,234,214,0.10); scrollbar-width:none;">
       <button
         v-for="tab in TABS" :key="tab.id"
-        class="flex-1 py-2 text-xs font-medium transition-colors"
+        class="flex-shrink-0 px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors sm:flex-1 sm:px-2"
         :style="activeTab === tab.id
           ? 'background:#e2532b;color:#fff;'
           : 'background:transparent;color:rgba(168,153,124,0.82);'"

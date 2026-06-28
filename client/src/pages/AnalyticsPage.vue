@@ -56,11 +56,32 @@
           <canvas ref="barChartRef" height="120" />
         </div>
 
-        <!-- Streak table -->
-        <div v-if="streakRows.length" class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
-          <div class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
+        <!-- Streak по привычкам -->
+        <div v-if="streakRows.length" class="rounded-2xl overflow-hidden mb-4" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <p class="text-sm font-medium px-4 pt-4 pb-2">Streak по привычкам</p>
-          <table class="w-full min-w-[420px] text-sm">
+
+          <!-- Mobile: список -->
+          <div class="sm:hidden">
+            <div
+              v-for="row in streakRows"
+              :key="row.habitId"
+              class="px-4 py-3"
+              style="border-top: 1px solid rgba(243,234,214,0.06);"
+            >
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="rounded-full flex-shrink-0" :style="{ width: '8px', height: '8px', background: row.color }" />
+                <span class="text-sm truncate">{{ row.title }}</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 pl-4 text-xs" style="color: rgba(168,153,124,0.82);">
+                <span>Текущий: <span style="color: #e2532b; font-weight: 600;">{{ pluralDays(row.current) }}</span></span>
+                <span>Лучший: <span style="color: rgba(243,234,214,0.92); font-weight: 600;">{{ pluralDays(row.best) }}</span></span>
+                <span>Выполнение: <span style="color: rgba(243,234,214,0.92); font-weight: 600;">{{ row.completionRate }}%</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop: таблица -->
+          <table class="hidden w-full text-sm sm:table">
             <thead>
               <tr style="border-bottom: 1px solid rgba(243,234,214,0.10);">
                 <th class="px-4 py-2 text-left text-xs font-medium" style="color: rgba(168,153,124,0.62);">Привычка</th>
@@ -82,12 +103,12 @@
                   </div>
                 </td>
                 <td class="px-4 py-2 text-center">
-                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(226,83,43,0.15); color: #e2532b;">
+                  <span class="px-2 py-0.5 rounded-full text-xs whitespace-nowrap" style="background: rgba(226,83,43,0.15); color: #e2532b;">
                     {{ pluralDays(row.current) }}
                   </span>
                 </td>
                 <td class="px-4 py-2 text-center">
-                  <span class="px-2 py-0.5 rounded-full text-xs" style="background: rgba(243,234,214,0.10); color: rgba(168,153,124,0.92);">
+                  <span class="px-2 py-0.5 rounded-full text-xs whitespace-nowrap" style="background: rgba(243,234,214,0.10); color: rgba(168,153,124,0.92);">
                     {{ pluralDays(row.best) }}
                   </span>
                 </td>
@@ -95,7 +116,6 @@
               </tr>
             </tbody>
           </table>
-          </div>
         </div>
 
         <!-- Heatmap аккордеоны -->
