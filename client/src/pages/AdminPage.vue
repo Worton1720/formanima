@@ -8,7 +8,7 @@
 
     <template v-else>
       <!-- Stats cards -->
-      <div v-if="stats" class="grid grid-cols-2 gap-3 mb-6" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));">
+      <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div class="rounded-xl p-4 text-center" style="background: rgba(226,83,43,0.1); border: 1px solid rgba(226,83,43,0.2);">
           <p class="text-3xl font-bold" style="color: #e2532b;">{{ stats.totalUsers }}</p>
           <p class="text-xs mt-1" style="color: rgba(168,153,124,0.82);">Пользователей</p>
@@ -33,7 +33,57 @@
         <p>Нет пользователей</p>
       </div>
 
-      <div v-else class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <template v-else>
+        <!-- Mobile: карточки -->
+        <div class="flex flex-col gap-3 sm:hidden">
+          <div
+            v-for="user in users"
+            :key="user.id"
+            class="rounded-2xl p-4"
+            style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-medium truncate" style="color: rgba(243,234,214,0.92);">{{ user.name }}</p>
+                <p class="text-xs truncate" style="color: rgba(168,153,124,0.7);">{{ user.email }}</p>
+              </div>
+              <span
+                class="px-2 py-0.5 rounded-full text-xs flex-shrink-0"
+                :style="roleChipStyle[user.role] ?? roleChipStyle.user"
+              >{{ user.role }}</span>
+            </div>
+
+            <div class="flex items-center gap-5 mt-3 text-xs" style="color: rgba(168,153,124,0.82);">
+              <span>Привычек: <span style="color: rgba(243,234,214,0.92); font-weight: 600;">{{ user.habitsCount }}</span></span>
+              <span>Страйков: <span style="color: rgba(243,234,214,0.92); font-weight: 600;">{{ user.strikesCount }}</span></span>
+            </div>
+
+            <div v-if="user.role !== 'admin'" class="flex gap-2 mt-4">
+              <button
+                class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm transition-colors"
+                :style="user.role === 'blocked'
+                  ? 'color: #86a861; background: rgba(34,197,94,0.1);'
+                  : 'color: #e0aa4e; background: rgba(245,158,11,0.1);'"
+                @click="toggleBlock(user.id)"
+              >
+                <UserCheck v-if="user.role === 'blocked'" class="w-4 h-4" />
+                <UserX v-else class="w-4 h-4" />
+                {{ user.role === 'blocked' ? 'Разблокировать' : 'Заблокировать' }}
+              </button>
+              <button
+                class="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg text-sm transition-colors"
+                style="color: #d6452b; background: rgba(239,68,68,0.1);"
+                @click="remove(user.id)"
+              >
+                <Trash2 class="w-4 h-4" />
+                Удалить
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop: таблица -->
+        <div class="hidden overflow-x-auto sm:block">
         <div class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
         <table class="w-full min-w-[560px] text-sm">
           <thead>
@@ -89,7 +139,8 @@
           </tbody>
         </table>
         </div>
-      </div>
+        </div>
+      </template>
     </template>
   </div>
 </template>
