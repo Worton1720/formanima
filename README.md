@@ -22,17 +22,55 @@
 
 **Возможности:** цели и привычки, ежедневный трекинг, система геймификации (XP, уровни, ранги, достижения), учёт финансов (транзакции, бюджеты, накопления), дневник питания и КБЖУ, аналитика и админ-панель.
 
-## Быстрый старт
+## Запуск
+
+После старта приложение доступно по адресам:
+
+| Сервис | URL |
+| ------ | --- |
+| Клиент (SPA) | http://localhost:5173 |
+| API | http://localhost:3000/api |
+| Swagger UI | http://localhost:3000/api/docs |
+| PostgreSQL | localhost:5434 |
+
+Предусмотрено два способа запуска.
+
+### Способ 1. Docker Compose
+
+Не требует установленных Node.js и PostgreSQL — нужен только Docker. Бэк и клиент собираются в отдельные образы, их можно запускать **по отдельности** или **вместе**.
 
 ```bash
-# 1. База данных
+# Всё вместе: БД + сервер + клиент
+docker compose up --build
+
+# Только бэкенд (поднимет ещё и БД через зависимость)
+docker compose up --build db server
+
+# Только клиент (статика через nginx)
+docker compose up --build client
+
+# Только база данных (например, для локальной разработки сервера)
+docker compose up -d db
+```
+
+Миграции Prisma применяются автоматически при старте контейнера `server`.
+Остановить и удалить контейнеры: `docker compose down` (с очисткой данных БД — `docker compose down -v`).
+
+> Если порт `5434`, `3000` или `5173` занят на хосте — поменяйте левую часть проброса в [docker-compose.yml](docker-compose.yml) (например, `"5435:5432"`).
+
+### Способ 2. Локально через npm
+
+Требуются Node.js 22+ и Docker (только для PostgreSQL).
+
+```bash
+# 1. База данных в Docker
 docker compose up -d db
 
 # 2. Сервер (http://localhost:3000/api, Swagger — /api/docs)
 cd server && cp .env.example .env && npm install && npx prisma migrate dev && npm run start:dev
 
-# 3. Клиент (http://localhost:5173)
-cd ../client && cp .env.example .env && npm install && npm run dev
+# 3. Клиент (http://localhost:5173) — в отдельном терминале
+cd client && cp .env.example .env && npm install && npm run dev
 ```
 
 Подробные инструкции по развёртыванию — в [docs/07-deployment.md](docs/07-deployment.md).
