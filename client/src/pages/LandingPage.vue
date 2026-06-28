@@ -9,7 +9,10 @@
     <div class="relative mx-auto flex min-h-screen max-w-5xl flex-col px-5 py-10">
       <!-- Шапка -->
       <header class="flex items-center justify-between forge-rise" style="animation-delay: 0ms;">
-        <span class="font-display text-xl tracking-tight text-text">FORMANIMA</span>
+        <div class="flex items-center gap-2">
+          <img src="/logo-icon.png" alt="FORMANIMA" class="h-8 w-8 object-contain" />
+          <span class="font-display text-xl tracking-tight text-text">FORMANIMA</span>
+        </div>
         <UiButton variant="ghost" size="sm" to="/login">Войти</UiButton>
       </header>
 

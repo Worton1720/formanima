@@ -9,10 +9,10 @@
       <div class="max-w-5xl mx-auto px-4 h-14 flex items-center gap-4">
         <router-link
           to="/dashboard"
-          class="font-display text-xl tracking-tight transition-colors hover:text-gold"
-          style="color: #f3ead6;"
+          class="flex items-center gap-2 transition-opacity hover:opacity-80"
         >
-          FORMANIMA
+          <img src="/logo-icon.png" alt="FORMANIMA" class="h-8 w-8 object-contain" />
+          <span class="font-display text-xl tracking-tight" style="color: #f3ead6;">FORMANIMA</span>
         </router-link>
 
         <!-- Desktop nav -->
