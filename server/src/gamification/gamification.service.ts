@@ -188,9 +188,11 @@ export class GamificationService {
 
     const level = rankRecord.level;
     const xp = rankRecord.xp;
+    // Уровень L занимает диапазон XP [100·(L-1)², 100·L²), т.к.
+    // level = floor(sqrt(xp/100)) + 1. Ширина диапазона = 100·(2L-1).
     const xpFloorCurrent = 100 * (level - 1) * (level - 1);
     const xpCurrentLevel = xp - xpFloorCurrent;
-    const xpToNextLevel = 100 * level;
+    const xpToNextLevel = 100 * (2 * level - 1);
 
     return {
       xp,

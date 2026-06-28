@@ -26,8 +26,8 @@
       <!-- Прогресс -->
       <div class="min-w-0 flex-1">
         <div class="mb-2 flex items-baseline justify-between gap-2">
-          <h2 class="font-display text-xl leading-none text-text">{{ rankLabel }}</h2>
-          <span class="flex items-center gap-1 rounded-full border border-border bg-surface-variant px-2 py-0.5">
+          <h2 class="min-w-0 truncate font-display text-xl leading-tight text-text">{{ rankLabel }}</h2>
+          <span class="flex flex-shrink-0 items-center gap-1 rounded-full border border-border bg-surface-variant px-2 py-0.5">
             <Flame class="h-3.5 w-3.5 text-primary" />
             <span class="font-stat text-xs font-bold text-gold">{{ profile.totalStrikes }}</span>
           </span>
@@ -44,9 +44,9 @@
           />
         </div>
 
-        <div class="flex justify-between font-stat text-[11px] text-text-muted">
-          <span>{{ profile.xpCurrentLevel }} XP</span>
-          <span class="text-text-faint">до уровня {{ profile.xpToNextLevel }} XP</span>
+        <div class="flex justify-between gap-2 font-stat text-[11px] text-text-muted">
+          <span class="whitespace-nowrap">{{ profile.xpCurrentLevel }} / {{ profile.xpToNextLevel }} XP</span>
+          <span class="whitespace-nowrap text-text-faint">до {{ profile.level + 1 }} уровня</span>
         </div>
       </div>
     </div>
