@@ -34,16 +34,49 @@ function dayUTC(daysAgo: number): Date {
   return d;
 }
 
-/** Метка завершения N дней назад в указанный час (для time-based ачивок). */
+/**
+ * Метка завершения N дней назад в указанный час. Используется ЛОКАЛЬНОЕ время,
+ * т.к. GamificationService проверяет time-based ачивки через `getHours()`
+ * (локальный час). Так результат стабилен и в UTC-контейнере, и локально.
+ */
 function completedAt(daysAgo: number, hour: number): Date {
-  const d = dayUTC(daysAgo);
-  d.setUTCHours(hour, 0, 0, 0);
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - daysAgo);
+  d.setHours(hour, 0, 0, 0);
   return d;
 }
 
 /** Текущий месяц в формате YYYY-MM. */
 function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
+}
+
+/** Детерминированный PRNG (mulberry32) — данные сида стабильны между запусками. */
+function mulberry32(seed: number): () => number {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Суббота/воскресенье по дате (UTC). */
+function isWeekend(d: Date): boolean {
+  const wd = d.getUTCDay();
+  return wd === 0 || wd === 6;
+}
+
+/** Профиль привычки для генерации реалистичного паттерна выполнения. */
+interface HabitProfile {
+  startDaysAgo: number; // сколько дней назад «заведена» привычка
+  base: number; // базовая вероятность выполнения в день
+  trend: number; // прибавка к вероятности к недавним дням (рост вовлечённости)
+  weekendDrop: number; // снижение вероятности по выходным
+  hour: number; // типичный час выполнения
+  alwaysRecentDays: number; // форсировать выполнение последние N дней (для стрика)
 }
 
 async function createUser(
@@ -59,12 +92,18 @@ async function createUser(
   });
 }
 
-/** Наполняет habit-цели прогрессом за последние `days` дней. */
-async function seedHabitProgress(
+/**
+ * Наполняет habit-цели реалистичным прогрессом за `horizon` дней.
+ * У каждой привычки свой паттерн (база, тренд, выходные, дата старта),
+ * поэтому % выполнения, стрики и хитмапы различаются — аналитика «живая».
+ * Последние 7 дней — идеальные (ачивка «Идеальная неделя»). Генерация
+ * детерминирована, данные стабильны между запусками сида.
+ */
+async function seedPatternedProgress(
   prisma: PrismaService,
   userId: string,
-  goalIds: string[],
-  days: number,
+  habits: { id: string; profile: HabitProfile }[],
+  horizon: number,
 ) {
   const rows: {
     goalId: string;
@@ -74,32 +113,38 @@ async function seedHabitProgress(
     completedAt: Date;
   }[] = [];
 
-  for (let d = days - 1; d >= 0; d--) {
-    for (const goalId of goalIds) {
-      // Лёгкий разброс по часам; крайние значения для ачивок «Ранняя птица»/«Ночная сова»
-      let hour = 8 + (d % 10);
-      if (d === 2) hour = 5; // ранняя птица
-      if (d === 4) hour = 23; // ночная сова
-      rows.push({
-        goalId,
-        userId,
-        date: dayUTC(d),
-        value: 1,
-        completedAt: completedAt(d, hour),
-      });
+  habits.forEach((h, idx) => {
+    const rand = mulberry32(1000 + idx * 97);
+    for (let d = h.profile.startDaysAgo; d >= 0; d--) {
+      const date = dayUTC(d);
+      let rate = h.profile.base + (h.profile.trend * (horizon - d)) / horizon;
+      if (h.profile.weekendDrop && isWeekend(date)) rate -= h.profile.weekendDrop;
+      rate = Math.max(0.05, Math.min(0.98, rate));
+
+      let done = rand() < rate;
+      if (d < 7) done = true; // идеальная последняя неделя
+      if (d < h.profile.alwaysRecentDays) done = true; // гарантированный недавний стрик
+      if (!done) continue;
+
+      // Крайние часы для ачивок «Ранняя птица» (idx 0, день 2) и «Ночная сова» (idx 2, день 4)
+      let hour = h.profile.hour;
+      if (idx === 0 && d === 2) hour = 5;
+      if (idx === 2 && d === 4) hour = 23;
+
+      rows.push({ goalId: h.id, userId, date, value: 1, completedAt: completedAt(d, hour) });
     }
-  }
+  });
 
   await prisma.goalProgress.createMany({ data: rows });
 
   // Денормализованный currentValue = сумма value по цели
-  for (const goalId of goalIds) {
+  for (const h of habits) {
     const agg = await prisma.goalProgress.aggregate({
-      where: { goalId },
+      where: { goalId: h.id },
       _sum: { value: true },
     });
     await prisma.goal.update({
-      where: { id: goalId },
+      where: { id: h.id },
       data: { currentValue: agg._sum.value ?? 0 },
     });
   }
@@ -109,14 +154,35 @@ async function seedRegularUser(prisma: PrismaService) {
   const user = await createUser(prisma, USER_EMAIL, 'Иван Пример', 'user', 'user123');
 
   // ─── Привычки ───────────────────────────────────────────────────────────
-  const habits = [
-    { title: 'Пить 2 л воды', icon: 'mdi-cup-water', color: '#0ea5e9', category: 'health' },
-    { title: 'Утренняя зарядка', icon: 'mdi-run', color: '#22c55e', category: 'fitness' },
-    { title: 'Чтение 30 минут', icon: 'mdi-book-open-variant', color: '#a855f7', category: 'growth' },
-    { title: 'Медитация', icon: 'mdi-meditation', color: '#f59e0b', category: 'health' },
+  // У каждой привычки свой характер: «вода» — железобетонная, «медитация» —
+  // самая молодая и нестабильная, «зарядка» проседает по выходным, «чтение»
+  // постепенно входит в привычку. Это даёт разнообразную аналитику.
+  const habitDefs: {
+    title: string;
+    icon: string;
+    color: string;
+    category: string;
+    profile: HabitProfile;
+  }[] = [
+    {
+      title: 'Пить 2 л воды', icon: 'mdi-cup-water', color: '#0ea5e9', category: 'health',
+      profile: { startDaysAgo: 90, base: 0.9, trend: 0.05, weekendDrop: 0, hour: 9, alwaysRecentDays: 30 },
+    },
+    {
+      title: 'Утренняя зарядка', icon: 'mdi-run', color: '#22c55e', category: 'fitness',
+      profile: { startDaysAgo: 75, base: 0.6, trend: 0.15, weekendDrop: 0.25, hour: 7, alwaysRecentDays: 0 },
+    },
+    {
+      title: 'Чтение 30 минут', icon: 'mdi-book-open-variant', color: '#a855f7', category: 'growth',
+      profile: { startDaysAgo: 90, base: 0.68, trend: 0.18, weekendDrop: 0, hour: 22, alwaysRecentDays: 0 },
+    },
+    {
+      title: 'Медитация', icon: 'mdi-meditation', color: '#f59e0b', category: 'health',
+      profile: { startDaysAgo: 45, base: 0.5, trend: 0.12, weekendDrop: 0.2, hour: 21, alwaysRecentDays: 0 },
+    },
   ];
-  const habitGoals: { id: string }[] = [];
-  for (const h of habits) {
+  const habitGoals: { id: string; profile: HabitProfile }[] = [];
+  for (const h of habitDefs) {
     const g = await prisma.goal.create({
       data: {
         userId: user.id,
@@ -127,15 +193,16 @@ async function seedRegularUser(prisma: PrismaService) {
         color: h.color,
         icon: h.icon,
         frequency: 'daily',
+        createdAt: dayUTC(h.profile.startDaysAgo),
       },
     });
-    habitGoals.push(g);
+    habitGoals.push({ id: g.id, profile: h.profile });
   }
-  // 40 дней непрерывного прогресса по всем привычкам:
-  //   - totalStrikes = 4 * 40 = 160 → ранг journeyman
-  //   - bestStreak = 40 → ачивки «Воин недели», «Мастер месяца»
-  //   - perfect days = 40 → ачивка «Идеальная неделя»
-  await seedHabitProgress(prisma, user.id, habitGoals.map((g) => g.id), 40);
+  // 90 дней истории с разными паттернами:
+  //   - разные % выполнения и стрики по привычкам → живые графики и хитмапы
+  //   - последние 7 дней идеальны → ачивка «Идеальная неделя»
+  //   - «вода» ≥30 дней подряд → гарантированный 30-дневный стрик → «Мастер месяца»
+  await seedPatternedProgress(prisma, user.id, habitGoals, 90);
 
   // ─── Проект с вехами ────────────────────────────────────────────────────
   const project = await prisma.goal.create({
@@ -172,6 +239,9 @@ async function seedRegularUser(prisma: PrismaService) {
   }
 
   // ─── Финансы ────────────────────────────────────────────────────────────
+  // 3 месяца истории: ежемесячная зарплата, подработки и расходы по 6
+  // категориям с разной частотой и разбросом сумм → наполненные графики.
+  const finRand = mulberry32(7777);
   const tx: {
     userId: string;
     type: string;
@@ -180,20 +250,25 @@ async function seedRegularUser(prisma: PrismaService) {
     description?: string;
     date: Date;
   }[] = [];
-  // Зарплата за два месяца
-  tx.push({ userId: user.id, type: 'income', amount: 90000, category: 'salary', description: 'Зарплата', date: dayUTC(45) });
-  tx.push({ userId: user.id, type: 'income', amount: 90000, category: 'salary', description: 'Зарплата', date: dayUTC(15) });
+  for (const d of [75, 45, 15]) {
+    tx.push({ userId: user.id, type: 'income', amount: 90000 + Math.round(finRand() * 8000), category: 'salary', description: 'Зарплата', date: dayUTC(d) });
+  }
   tx.push({ userId: user.id, type: 'income', amount: 12000, category: 'freelance', description: 'Подработка', date: dayUTC(20) });
-  // Расходы по категориям
-  const expenseTemplate = [
-    { category: 'groceries', description: 'Продукты', amount: 2500 },
-    { category: 'transport', description: 'Транспорт', amount: 900 },
-    { category: 'cafe', description: 'Кафе', amount: 1400 },
-    { category: 'entertainment', description: 'Развлечения', amount: 1800 },
+  tx.push({ userId: user.id, type: 'income', amount: 7500, category: 'freelance', description: 'Подработка', date: dayUTC(52) });
+
+  const expenseCats = [
+    { category: 'groceries', description: 'Продукты', base: 1800, everyDays: 4 },
+    { category: 'transport', description: 'Транспорт', base: 700, everyDays: 3 },
+    { category: 'cafe', description: 'Кафе и рестораны', base: 1200, everyDays: 6 },
+    { category: 'entertainment', description: 'Развлечения', base: 1600, everyDays: 9 },
+    { category: 'health', description: 'Аптека', base: 900, everyDays: 14 },
+    { category: 'utilities', description: 'Коммуналка', base: 5500, everyDays: 30 },
   ];
-  for (let d = 0; d < 50; d += 3) {
-    const t = expenseTemplate[(d / 3) % expenseTemplate.length];
-    tx.push({ userId: user.id, type: 'expense', amount: t.amount, category: t.category, description: t.description, date: dayUTC(d) });
+  for (const c of expenseCats) {
+    for (let d = 88; d >= 0; d -= c.everyDays) {
+      const amount = Math.round(c.base * (0.7 + finRand() * 0.8));
+      tx.push({ userId: user.id, type: 'expense', amount, category: c.category, description: c.description, date: dayUTC(d) });
+    }
   }
   await prisma.transaction.createMany({ data: tx });
 
@@ -205,6 +280,8 @@ async function seedRegularUser(prisma: PrismaService) {
       { userId: user.id, category: 'transport', month, amount: 6000 },
       { userId: user.id, category: 'cafe', month, amount: 8000 },
       { userId: user.id, category: 'entertainment', month, amount: 10000 },
+      { userId: user.id, category: 'health', month, amount: 3000 },
+      { userId: user.id, category: 'utilities', month, amount: 7000 },
     ],
   });
 
@@ -236,9 +313,22 @@ async function seedRegularUser(prisma: PrismaService) {
     carbs: number;
     date: Date;
   }[] = [];
-  for (let d = 0; d < 7; d++) {
+  const calRand = mulberry32(4242);
+  for (let d = 0; d < 14; d++) {
     for (const m of meals) {
-      foodRows.push({ userId: user.id, name: m.name, mealType: m.mealType, calories: m.calories, protein: m.protein, fat: m.fat, carbs: m.carbs, date: dayUTC(d) });
+      // Иногда пропускаем перекус и слегка варьируем калории/БЖУ — сводки оживают
+      if (m.mealType === 'snack' && calRand() < 0.4) continue;
+      const k = 0.85 + calRand() * 0.3;
+      foodRows.push({
+        userId: user.id,
+        name: m.name,
+        mealType: m.mealType,
+        calories: Math.round(m.calories * k),
+        protein: Math.round(m.protein * k),
+        fat: Math.round(m.fat * k),
+        carbs: Math.round(m.carbs * k),
+        date: dayUTC(d),
+      });
     }
   }
   await prisma.foodEntry.createMany({ data: foodRows });
@@ -250,12 +340,24 @@ async function seedAdminUser(prisma: PrismaService) {
   const admin = await createUser(prisma, ADMIN_EMAIL, 'Администратор', 'admin', 'admin123');
 
   // Немного данных, чтобы профиль администратора не был пустым
-  const habits = [
-    { title: 'Планирование дня', icon: 'mdi-calendar-check', color: '#14b8a6', category: 'work' },
-    { title: 'Английский язык', icon: 'mdi-translate', color: '#ef4444', category: 'growth' },
+  const habitDefs: {
+    title: string;
+    icon: string;
+    color: string;
+    category: string;
+    profile: HabitProfile;
+  }[] = [
+    {
+      title: 'Планирование дня', icon: 'mdi-calendar-check', color: '#14b8a6', category: 'work',
+      profile: { startDaysAgo: 30, base: 0.75, trend: 0.1, weekendDrop: 0.3, hour: 9, alwaysRecentDays: 7 },
+    },
+    {
+      title: 'Английский язык', icon: 'mdi-translate', color: '#ef4444', category: 'growth',
+      profile: { startDaysAgo: 21, base: 0.6, trend: 0.15, weekendDrop: 0, hour: 20, alwaysRecentDays: 0 },
+    },
   ];
-  const goals: { id: string }[] = [];
-  for (const h of habits) {
+  const goals: { id: string; profile: HabitProfile }[] = [];
+  for (const h of habitDefs) {
     const g = await prisma.goal.create({
       data: {
         userId: admin.id,
@@ -266,11 +368,12 @@ async function seedAdminUser(prisma: PrismaService) {
         color: h.color,
         icon: h.icon,
         frequency: 'daily',
+        createdAt: dayUTC(h.profile.startDaysAgo),
       },
     });
-    goals.push(g);
+    goals.push({ id: g.id, profile: h.profile });
   }
-  await seedHabitProgress(prisma, admin.id, goals.map((g) => g.id), 14);
+  await seedPatternedProgress(prisma, admin.id, goals, 30);
 
   await prisma.transaction.createMany({
     data: [
