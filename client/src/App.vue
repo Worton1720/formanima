@@ -6,7 +6,4 @@
 
 <script setup lang="ts">
 import AppLayout from './components/common/AppLayout.vue';
-import { useFaviconAnimation } from './composables/useFaviconAnimation';
-
-useFaviconAnimation();
 </script>
