@@ -18,7 +18,7 @@
              style="box-shadow: inset 0 0 14px rgba(224,170,78,0.18), 0 0 0 4px rgba(224,170,78,0.06);">
           <component :is="rankIcon" class="h-8 w-8 text-gold" />
         </div>
-        <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full border border-border-strong bg-background px-2 py-0.5 font-stat text-[10px] font-bold text-gold">
+        <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-border-strong bg-background px-2 py-0.5 font-stat text-[10px] font-bold leading-none text-gold">
           LV {{ profile.level }}
         </span>
       </div>
