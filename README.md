@@ -66,15 +66,22 @@ docker compose up -d db
 # 1. База данных в Docker
 docker compose up -d db
 
-# 2. Сервер (http://localhost:3000/api, Swagger — /api/docs)
-cd server && cp .env.example .env && npm install && npx prisma migrate dev && npm run start:dev
+# 2. Сервер: установка, миграции, заполнение БД демо-данными
+cd server
+cp .env.example .env
+npm install
+npx prisma migrate dev   # применить миграции
+npm run seed             # заполнить БД демо-данными (учётки + наполнение)
 
-# 3. Клиент (http://localhost:5173) — в отдельном терминале
+# 3. Запуск сервера (http://localhost:3000/api, Swagger — /api/docs)
+npm run start:dev
+
+# 4. Клиент (http://localhost:5173) — в отдельном терминале
 cd client && cp .env.example .env && npm install && npm run dev
 ```
 
-При локальном запуске демо-данные можно засеять вручную: `cd server && npm run seed`
-(пересоздать заново — `SEED_FRESH=true npm run seed`).
+`npm run seed` идемпотентен: если демо-учётки уже есть — он ничего не делает.
+Чтобы пересоздать демо-данные с нуля: `SEED_FRESH=true npm run seed`.
 
 ## Демо-учётки
 
