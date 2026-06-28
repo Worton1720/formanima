@@ -87,6 +87,18 @@
         </router-link>
       </div>
 
+      <div v-if="auth.userRole === 'admin'" class="border-t px-6 py-3" style="border-color: rgba(243,234,214,0.10);">
+        <router-link
+          to="/admin"
+          class="flex items-center gap-3 py-2"
+          style="color: rgba(168,153,124,0.95);"
+        >
+          <ShieldCheck class="w-5 h-5 flex-shrink-0" style="color: #e2532b;" />
+          <span class="text-sm flex-1">Админ-панель</span>
+          <ChevronRight class="w-4 h-4" style="color: rgba(243,234,214,0.3);" />
+        </router-link>
+      </div>
+
       <div class="border-t px-6 py-4 flex items-center gap-2" style="border-color: rgba(243,234,214,0.10);">
         <UiButton variant="ghost" @click="logout">
           <LogOut class="w-4 h-4 mr-1" style="color: #d6452b;" />
@@ -110,7 +122,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { User, Mail, Calendar, LogOut, Pencil, Languages, Trophy, ChevronRight } from 'lucide-vue-next';
+import { User, Mail, Calendar, LogOut, Pencil, Languages, Trophy, ChevronRight, ShieldCheck } from 'lucide-vue-next';
 import { useAuthStore } from '../stores/auth.store';
 import { useNotify } from '../composables/useNotify';
 import { authApi } from '../api/auth.api';
