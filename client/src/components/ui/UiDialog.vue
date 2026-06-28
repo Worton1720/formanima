@@ -18,7 +18,7 @@
           leave="ease-in duration-150" leave-from="opacity-100 scale-100" leave-to="opacity-0 scale-95"
         >
           <DialogPanel
-            :class="['w-full rounded-2xl shadow-2xl', maxWidthClasses[maxWidth ?? 'md']]"
+            :class="['w-full rounded-2xl shadow-2xl max-h-[85dvh] overflow-y-auto overscroll-contain', maxWidthClasses[maxWidth ?? 'md']]"
             style="background: #211a12;"
           >
             <slot />

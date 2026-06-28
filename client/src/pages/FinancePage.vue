@@ -12,7 +12,7 @@
     </div>
 
     <!-- Summary cards -->
-    <div class="grid grid-cols-3 gap-3 mb-5">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-5">
       <div class="rounded-xl p-3 text-center" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);">
         <p class="text-base font-bold" style="color:#86a861;">+{{ fmt(store.summary.income) }}</p>
         <p class="text-xs mt-0.5" style="color:rgba(168,153,124,0.82);">Доходы</p>
@@ -172,23 +172,25 @@
         </div>
         <template v-else>
           <p class="text-xs mb-3" style="color:rgba(168,153,124,0.62);">Последние {{ store.trends.length }} мес.</p>
-          <div class="rounded-2xl overflow-hidden" style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
-            <!-- Header row -->
-            <div class="grid grid-cols-4 px-4 py-2 text-xs font-medium" style="color:rgba(168,153,124,0.62);border-bottom:1px solid rgba(243,234,214,0.06);">
-              <span>Месяц</span>
-              <span class="text-right" style="color:#86a861;">Доход</span>
-              <span class="text-right" style="color:#d6452b;">Расход</span>
-              <span class="text-right">Баланс</span>
-            </div>
-            <div v-for="(t, i) in store.trends" :key="t.month"
-              class="grid grid-cols-4 px-4 py-3 text-sm"
-              :style="i < store.trends.length - 1 ? 'border-bottom:1px solid rgba(243,234,214,0.04);' : ''">
-              <span class="font-medium">{{ t.month }}</span>
-              <span class="text-right" style="color:#86a861;">+{{ fmt(t.income) }}</span>
-              <span class="text-right" style="color:#d6452b;">-{{ fmt(t.expense) }}</span>
-              <span class="text-right font-semibold" :style="t.balance >= 0 ? 'color:#e2532b;' : 'color:#d6452b;'">
-                {{ t.balance >= 0 ? '+' : '-' }}{{ fmt(t.balance) }}
-              </span>
+          <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div class="rounded-2xl overflow-hidden" style="background:#211a12;border:1px solid rgba(243,234,214,0.10);">
+              <!-- Header row -->
+              <div class="grid grid-cols-4 min-w-[420px] px-4 py-2 text-xs font-medium" style="color:rgba(168,153,124,0.62);border-bottom:1px solid rgba(243,234,214,0.06);">
+                <span>Месяц</span>
+                <span class="text-right" style="color:#86a861;">Доход</span>
+                <span class="text-right" style="color:#d6452b;">Расход</span>
+                <span class="text-right">Баланс</span>
+              </div>
+              <div v-for="(t, i) in store.trends" :key="t.month"
+                class="grid grid-cols-4 min-w-[420px] px-4 py-3 text-sm"
+                :style="i < store.trends.length - 1 ? 'border-bottom:1px solid rgba(243,234,214,0.04);' : ''">
+                <span class="font-medium">{{ t.month }}</span>
+                <span class="text-right" style="color:#86a861;">+{{ fmt(t.income) }}</span>
+                <span class="text-right" style="color:#d6452b;">-{{ fmt(t.expense) }}</span>
+                <span class="text-right font-semibold" :style="t.balance >= 0 ? 'color:#e2532b;' : 'color:#d6452b;'">
+                  {{ t.balance >= 0 ? '+' : '-' }}{{ fmt(t.balance) }}
+                </span>
+              </div>
             </div>
           </div>
         </template>

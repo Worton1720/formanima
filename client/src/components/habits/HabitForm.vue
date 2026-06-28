@@ -21,7 +21,7 @@
         <UiSelect v-model="form.frequency" label="Частота" :options="frequencies" />
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="text-sm block mb-1" style="color: rgba(168,153,124,0.82);">Цвет</label>
           <input

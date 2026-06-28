@@ -57,7 +57,7 @@
     </header>
 
     <!-- Main content -->
-    <main class="flex-1" :class="auth.isAuthenticated && isMobile ? 'pb-16' : ''">
+    <main class="flex-1" :class="auth.isAuthenticated && isMobile ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : ''">
       <slot />
     </main>
 
@@ -65,7 +65,7 @@
     <nav
       v-if="auth.isAuthenticated && isMobile"
       class="fixed bottom-0 left-0 right-0 z-30 flex"
-      style="background: #211a12; border-top: 1px solid rgba(243,234,214,0.10);"
+      style="background: #211a12; border-top: 1px solid rgba(243,234,214,0.10); padding-bottom: env(safe-area-inset-bottom);"
     >
       <router-link
         v-for="link in mobileNavLinks"
@@ -85,7 +85,7 @@
         v-if="notify.visible.value"
         class="fixed z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-3"
         :class="snackbarColor[notify.color.value ?? 'default']"
-        style="bottom: 80px; right: 16px; min-width: 200px;"
+        style="bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; min-width: 200px;"
       >
         <span class="flex-1">{{ notify.message.value }}</span>
         <button @click="notify.visible.value = false">

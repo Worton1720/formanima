@@ -29,7 +29,7 @@
 
       <template v-else>
         <!-- KPI карточки -->
-        <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
           <div class="rounded-xl p-3 text-center" style="background: rgba(226,83,43,0.1); border: 1px solid rgba(226,83,43,0.2);">
             <p class="text-2xl font-bold" style="color: #e2532b;">{{ avgCompletion }}%</p>
             <p class="text-xs mt-1" style="color: rgba(168,153,124,0.82);">выполнений</p>
@@ -57,9 +57,10 @@
         </div>
 
         <!-- Streak table -->
-        <div v-if="streakRows.length" class="rounded-2xl mb-4 overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
+        <div v-if="streakRows.length" class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
+          <div class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
           <p class="text-sm font-medium px-4 pt-4 pb-2">Streak по привычкам</p>
-          <table class="w-full text-sm">
+          <table class="w-full min-w-[420px] text-sm">
             <thead>
               <tr style="border-bottom: 1px solid rgba(243,234,214,0.10);">
                 <th class="px-4 py-2 text-left text-xs font-medium" style="color: rgba(168,153,124,0.62);">Привычка</th>
@@ -94,6 +95,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- Heatmap аккордеоны -->

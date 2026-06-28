@@ -21,7 +21,7 @@
         </p>
 
         <h1 class="forge-rise font-display font-black leading-[0.92] tracking-tight"
-            style="animation-delay: 140ms; font-size: clamp(3.5rem, 12vw, 8rem);">
+            style="animation-delay: 140ms; font-size: clamp(2.5rem, 12vw, 8rem);">
           <span class="bg-gradient-to-b from-[#f6ead2] to-[#cdab6f] bg-clip-text text-transparent">FORM</span><span class="text-primary">ANIMA</span>
         </h1>
 

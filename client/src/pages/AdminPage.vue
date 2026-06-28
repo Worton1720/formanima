@@ -33,8 +33,9 @@
         <p>Нет пользователей</p>
       </div>
 
-      <div v-else class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
-        <table class="w-full text-sm">
+      <div v-else class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div class="rounded-2xl overflow-hidden" style="background: #211a12; border: 1px solid rgba(243,234,214,0.10);">
+        <table class="w-full min-w-[560px] text-sm">
           <thead>
             <tr style="border-bottom: 1px solid rgba(243,234,214,0.10);">
               <th class="px-4 py-3 text-left text-xs font-medium" style="color: rgba(168,153,124,0.62);">Email</th>
@@ -87,6 +88,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </template>
   </div>

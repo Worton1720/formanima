@@ -36,9 +36,9 @@
 
       <!-- Calorie ring + progress card -->
       <div class="rounded-2xl p-5 mb-5" style="background:#211a12; border:1px solid rgba(243,234,214,0.10);">
-        <div class="flex items-center gap-6">
+        <div class="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6">
           <!-- Ring -->
-          <div class="relative flex-shrink-0">
+          <div class="relative flex-shrink-0 self-center sm:self-auto">
             <svg width="96" height="96" viewBox="0 0 96 96">
               <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(243,234,214,0.06)" stroke-width="10"/>
               <circle
@@ -112,7 +112,7 @@
             <UiInput v-model="form.caloriesStr" label="Калории *" placeholder="250" type="number" :error="formErrors.calories" />
             <UiInput v-model="form.weightStr" label="Вес, г" placeholder="100" type="number" />
           </div>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <UiInput v-model="form.proteinStr" label="Белки, г" placeholder="0" type="number" />
             <UiInput v-model="form.fatStr" label="Жиры, г" placeholder="0" type="number" />
             <UiInput v-model="form.carbsStr" label="Углеводы, г" placeholder="0" type="number" />
