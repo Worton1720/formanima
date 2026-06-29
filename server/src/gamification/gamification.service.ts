@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ACHIEVEMENTS } from './achievements.config';
 
 @Injectable()
 export class GamificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
 
   private getRank(totalStrikes: number): string {
     if (totalStrikes >= 1500) return 'grandmaster';
@@ -95,7 +99,10 @@ export class GamificationService {
     const hasEarlyBird = allProgresses.some((p) => p.completedAt.getHours() < 6);
     const hasNightOwl = allProgresses.some((p) => p.completedAt.getHours() >= 23);
 
-    // 7. Already unlocked achievements
+    // 7. Already unlocked achievements + save current level for notification diff
+    const existingRank = await this.prisma.userRank.findUnique({ where: { userId } });
+    const oldLevel = existingRank?.level ?? 1;
+
     const existingUnlocks = await this.prisma.userAchievement.findMany({
       where: { userId },
       select: { achievementId: true },
@@ -103,6 +110,7 @@ export class GamificationService {
     const unlockedIds = new Set(existingUnlocks.map((u) => u.achievementId));
 
     // 8. Check new achievements
+    const newlyUnlocked: string[] = [];
     for (const ach of ACHIEVEMENTS) {
       if (unlockedIds.has(ach.id)) continue;
       let qualifies = false;
@@ -152,6 +160,7 @@ export class GamificationService {
           update: {},
         });
         unlockedIds.add(ach.id);
+        newlyUnlocked.push(ach.name);
       }
     }
 
@@ -172,6 +181,14 @@ export class GamificationService {
       create: { userId, xp, level, totalStrikes, rank },
       update: { xp, level, totalStrikes, rank },
     });
+
+    // 12. Fire-and-forget push notifications — failures must not break the response
+    for (const name of newlyUnlocked) {
+      this.notifications.notifyAchievementUnlocked(userId, name).catch(() => {});
+    }
+    if (level > oldLevel) {
+      this.notifications.notifyLevelUp(userId, level).catch(() => {});
+    }
   }
 
   async getProfile(userId: string) {
