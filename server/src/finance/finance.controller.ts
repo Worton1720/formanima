@@ -5,6 +5,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpsertBudgetDto } from './dto/upsert-budget.dto';
 import { ContributeGoalDto, CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateSavingsGoalDto } from './dto/update-savings-goal.dto';
+import { MonthQueryDto, RequiredMonthQueryDto } from './dto/month-query.dto';
 
 @Controller('finance')
 @UseGuards(JwtAuthGuard)
@@ -23,17 +24,17 @@ export class FinanceController {
   }
 
   @Get('transactions')
-  getTransactions(@Request() req: any, @Query('month') month?: string) {
+  getTransactions(@Request() req: any, @Query() { month }: MonthQueryDto) {
     return this.finance.getTransactions(req.user.userId, month);
   }
 
   @Get('summary')
-  getSummary(@Request() req: any, @Query('month') month?: string) {
+  getSummary(@Request() req: any, @Query() { month }: MonthQueryDto) {
     return this.finance.getSummary(req.user.userId, month);
   }
 
   @Get('breakdown')
-  getCategoryBreakdown(@Request() req: any, @Query('month') month?: string) {
+  getCategoryBreakdown(@Request() req: any, @Query() { month }: MonthQueryDto) {
     return this.finance.getCategoryBreakdown(req.user.userId, month);
   }
 
@@ -49,7 +50,7 @@ export class FinanceController {
 
   // Budgets
   @Get('budgets')
-  getBudgets(@Request() req: any, @Query('month') month: string) {
+  getBudgets(@Request() req: any, @Query() { month }: RequiredMonthQueryDto) {
     return this.finance.getBudgets(req.user.userId, month);
   }
 
