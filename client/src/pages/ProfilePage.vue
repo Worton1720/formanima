@@ -72,6 +72,81 @@
               >{{ lang.toUpperCase() }}</button>
             </div>
           </div>
+
+          <!-- Push-уведомления -->
+          <div class="border-t mt-4 mb-4" style="border-color: rgba(243,234,214,0.10);" />
+          <p class="text-sm font-medium mb-4">Уведомления</p>
+
+          <div v-if="pushSupported" class="flex items-center gap-3 mb-3">
+            <Bell class="w-5 h-5 flex-shrink-0" style="color: rgba(168,153,124,0.62);" />
+            <span class="text-sm flex-1" style="color: rgba(168,153,124,0.95);">Push-уведомления</span>
+            <UiSwitch :model-value="pushEnabled" @update:model-value="togglePush" />
+          </div>
+
+          <template v-if="pushEnabled && notifPrefs">
+            <div class="flex items-center gap-3 mb-3">
+              <Clock class="w-5 h-5 flex-shrink-0" style="color: rgba(168,153,124,0.62);" />
+              <span class="text-sm flex-1" style="color: rgba(168,153,124,0.95);">Напоминание</span>
+              <UiSwitch
+                :model-value="notifPrefs.reminderEnabled"
+                @update:model-value="(v) => savePref({ reminderEnabled: v })"
+              />
+            </div>
+            <div v-if="notifPrefs.reminderEnabled" class="flex items-center gap-3 mb-3 pl-8">
+              <span class="text-sm flex-1" style="color: rgba(168,153,124,0.62);">Время (МСК)</span>
+              <div class="flex items-center gap-1">
+                <select
+                  :value="utcToMsk(notifPrefs.reminderTime).split(':')[0]"
+                  class="rounded-lg px-2 py-1 text-sm"
+                  style="background: #1c160f; border: 1px solid rgba(243,234,214,0.10); color: rgba(243,234,214,0.92);"
+                  @change="(e) => savePref({ reminderTime: mskToUtc(`${(e.target as HTMLSelectElement).value}:${utcToMsk(notifPrefs!.reminderTime).split(':')[1]}`) })"
+                >
+                  <option v-for="h in 24" :key="h - 1" :value="String(h - 1).padStart(2, '0')">
+                    {{ String(h - 1).padStart(2, '0') }}
+                  </option>
+                </select>
+                <span style="color: rgba(243,234,214,0.4);">:</span>
+                <select
+                  :value="utcToMsk(notifPrefs.reminderTime).split(':')[1]"
+                  class="rounded-lg px-2 py-1 text-sm"
+                  style="background: #1c160f; border: 1px solid rgba(243,234,214,0.10); color: rgba(243,234,214,0.92);"
+                  @change="(e) => savePref({ reminderTime: mskToUtc(`${utcToMsk(notifPrefs!.reminderTime).split(':')[0]}:${(e.target as HTMLSelectElement).value}`) })"
+                >
+                  <option v-for="m in ['00','05','10','15','20','25','30','35','40','45','50','55']" :key="m" :value="m">
+                    {{ m }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 mb-3">
+              <Trophy class="w-5 h-5 flex-shrink-0" style="color: rgba(168,153,124,0.62);" />
+              <span class="text-sm flex-1" style="color: rgba(168,153,124,0.95);">Достижения</span>
+              <UiSwitch
+                :model-value="notifPrefs.achievementEnabled"
+                @update:model-value="(v) => savePref({ achievementEnabled: v })"
+              />
+            </div>
+            <div class="flex items-center gap-3 mb-3">
+              <Flame class="w-5 h-5 flex-shrink-0" style="color: rgba(168,153,124,0.62);" />
+              <span class="text-sm flex-1" style="color: rgba(168,153,124,0.95);">Серия под угрозой</span>
+              <UiSwitch
+                :model-value="notifPrefs.streakEnabled"
+                @update:model-value="(v) => savePref({ streakEnabled: v })"
+              />
+            </div>
+            <div class="flex items-center gap-3">
+              <Zap class="w-5 h-5 flex-shrink-0" style="color: rgba(168,153,124,0.62);" />
+              <span class="text-sm flex-1" style="color: rgba(168,153,124,0.95);">Повышение уровня</span>
+              <UiSwitch
+                :model-value="notifPrefs.levelUpEnabled"
+                @update:model-value="(v) => savePref({ levelUpEnabled: v })"
+              />
+            </div>
+          </template>
+
+          <p v-if="!pushSupported" class="text-xs mt-2" style="color: rgba(168,153,124,0.5);">
+            Браузер не поддерживает уведомления
+          </p>
         </template>
       </div>
 
@@ -120,19 +195,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { User, Mail, Calendar, LogOut, Pencil, Languages, Trophy, ChevronRight, ShieldCheck } from 'lucide-vue-next';
+import { User, Mail, Calendar, LogOut, Pencil, Languages, Trophy, ChevronRight, ShieldCheck, Bell, Clock, Flame, Zap } from 'lucide-vue-next';
 import { useAuthStore } from '../stores/auth.store';
 import { useNotify } from '../composables/useNotify';
+import { usePushNotifications } from '../composables/usePushNotifications';
+import { useNotificationsStore } from '../stores/notifications.store';
 import { authApi } from '../api/auth.api';
-import { UiButton, UiInput, UiSpinner } from '../components/ui';
+import { UiButton, UiInput, UiSpinner, UiSwitch } from '../components/ui';
 import GamificationHero from '../components/gamification/GamificationHero.vue';
 import type { User as UserType } from '../types';
+import type { PushPreferences } from '../api/notifications.api';
 
 const auth = useAuthStore();
 const router = useRouter();
 const { notify } = useNotify();
+const push = usePushNotifications();
+const notifStore = useNotificationsStore();
 
 const profile = ref<UserType | null>(null);
 const loading = ref(true);
@@ -143,6 +223,10 @@ const language = ref<'ru' | 'en'>(
   (localStorage.getItem('language') as 'ru' | 'en') ?? 'ru',
 );
 
+const pushSupported = push.isSupported;
+const pushEnabled = ref(push.isSubscribed.value);
+const notifPrefs = computed(() => notifStore.preferences);
+
 onMounted(async () => {
   try {
     profile.value = await authApi.getMe();
@@ -150,6 +234,19 @@ onMounted(async () => {
     notify('Не удалось загрузить профиль');
   } finally {
     loading.value = false;
+  }
+
+  if (!push.isSupported.value) return;
+
+  await push.checkSubscription();
+  if (push.isSubscribed.value) {
+    pushEnabled.value = true;
+    await notifStore.fetchPreferences();
+  } else {
+    pushEnabled.value = true;
+    const ok = await push.subscribe();
+    pushEnabled.value = ok;
+    if (ok) await notifStore.fetchPreferences();
   }
 });
 
@@ -189,9 +286,45 @@ async function saveProfile() {
   }
 }
 
+function utcToMsk(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  return `${String((h + 3) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function mskToUtc(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  return `${String((h - 3 + 24) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
 function setLanguage(lang: 'ru' | 'en') {
   language.value = lang;
   localStorage.setItem('language', lang);
+}
+
+async function togglePush(enabled: boolean) {
+  pushEnabled.value = enabled;
+  if (enabled) {
+    const ok = await push.subscribe();
+    pushEnabled.value = ok;
+    if (ok) {
+      await notifStore.fetchPreferences();
+      notify('Уведомления включены', 'success');
+    } else {
+      notify('Не удалось получить разрешение на уведомления');
+    }
+  } else {
+    await push.unsubscribe();
+    notifStore.preferences = null;
+    notify('Уведомления отключены', 'info');
+  }
+}
+
+async function savePref(dto: Partial<PushPreferences>) {
+  try {
+    await notifStore.updatePreferences(dto);
+  } catch {
+    notify('Не удалось сохранить настройки');
+  }
 }
 
 async function logout() {
