@@ -15,6 +15,7 @@ generated/
 # Logs
 *.log
 npm-debug.log*
+logs/
 
 # Playwright CLI artifacts
 .playwright-cli/

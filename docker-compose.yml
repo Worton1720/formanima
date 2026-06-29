@@ -20,12 +20,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - ./server/.env
     environment:
       DATABASE_URL: postgresql://formanima:secret@db:5432/formanima
-      JWT_ACCESS_SECRET: change_me_access_secret
-      JWT_REFRESH_SECRET: change_me_refresh_secret
-      JWT_ACCESS_EXPIRES: 15m
-      JWT_REFRESH_EXPIRES: 7d
       PORT: 3000
       CORS_ORIGIN: http://localhost:5173
     ports:

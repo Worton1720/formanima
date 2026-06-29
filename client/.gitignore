@@ -4,6 +4,16 @@ node_modules/
 # Build
 dist/
 dist-ssr/
+dev-dist/
+
+# Vite cache
+.vite/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Test coverage
+coverage/
 
 # Environment
 .env

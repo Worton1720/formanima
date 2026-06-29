@@ -5,6 +5,20 @@ node_modules/
 .env
 .env.*
 !.env.example
+*.local
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Build
+*.tsbuildinfo
+coverage/
 
 # Claude Code
 .claude/
