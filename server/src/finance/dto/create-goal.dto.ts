@@ -1,6 +1,6 @@
 import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 
-export class CreateGoalDto {
+export class CreateSavingsGoalDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)

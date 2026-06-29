@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FinanceService } from './finance.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpsertBudgetDto } from './dto/upsert-budget.dto';
-import { ContributeGoalDto, CreateGoalDto } from './dto/create-goal.dto';
+import { ContributeGoalDto, CreateSavingsGoalDto } from './dto/create-goal.dto';
 import { UpdateSavingsGoalDto } from './dto/update-savings-goal.dto';
 import { MonthQueryDto, RequiredMonthQueryDto } from './dto/month-query.dto';
 
@@ -71,7 +71,7 @@ export class FinanceController {
   }
 
   @Post('goals')
-  createGoal(@Body() dto: CreateGoalDto, @Request() req: any) {
+  createGoal(@Body() dto: CreateSavingsGoalDto, @Request() req: any) {
     return this.finance.createGoal(req.user.userId, dto);
   }
 

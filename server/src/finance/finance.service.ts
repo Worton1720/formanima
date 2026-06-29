@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpsertBudgetDto } from './dto/upsert-budget.dto';
-import { ContributeGoalDto, CreateGoalDto } from './dto/create-goal.dto';
+import { ContributeGoalDto, CreateSavingsGoalDto } from './dto/create-goal.dto';
 import { UpdateSavingsGoalDto } from './dto/update-savings-goal.dto';
 import { SavingsGoal } from '@prisma/client';
 
@@ -135,7 +135,7 @@ export class FinanceService {
     return this.prisma.savingsGoal.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
   }
 
-  async createGoal(userId: string, dto: CreateGoalDto) {
+  async createGoal(userId: string, dto: CreateSavingsGoalDto) {
     return this.prisma.savingsGoal.create({
       data: { userId, title: dto.title, targetAmount: dto.targetAmount, deadline: dto.deadline ? new Date(dto.deadline) : null },
     });
